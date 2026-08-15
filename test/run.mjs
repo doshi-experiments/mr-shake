@@ -11,7 +11,10 @@ import {
   eliminate, tallyBallots, normalizeGuess, guessIsCorrect,
   initialState, reduce,
 } from "../src/game.js";
-import { PAIRS, CATEGORIES, CATEGORY_IDS } from "../src/words.js";
+import {
+  PAIRS, CATEGORIES, CATEGORY_IDS,
+  DIRTY_PAIRS, DIRTY_CATEGORIES, DIRTY_CATEGORY_IDS, packFor,
+} from "../src/words.js";
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = "") => {
@@ -29,16 +32,36 @@ const setupOf = (players, undercovers, mrShakes) => ({
 });
 
 /* ------------------------------------------------------------------ */
-head("The word pack");
-ok("every pair has two words and a known category",
-   PAIRS.every((p) => p.length === 3 && p[0] && p[1] && CATEGORY_IDS.includes(p[2])),
-   PAIRS.length + " pairs");
-ok("no word appears in two pairs",
-   new Set(PAIRS.flatMap((p) => [p[0].toLowerCase(), p[1].toLowerCase()])).size === PAIRS.length * 2);
-ok("the two sides of a pair are never the same word",
-   PAIRS.every((p) => p[0].toLowerCase() !== p[1].toLowerCase()));
-ok("every category has pairs behind its chip",
-   CATEGORIES.every((c) => PAIRS.some((p) => p[2] === c.id)));
+head("The word packs");
+for (const [label, pairs, cats, ids] of [
+  ["clean", PAIRS, CATEGORIES, CATEGORY_IDS],
+  ["rude", DIRTY_PAIRS, DIRTY_CATEGORIES, DIRTY_CATEGORY_IDS],
+]) {
+  ok(label + ": every pair has two words and a known category",
+     pairs.every((p) => p.length === 3 && p[0] && p[1] && ids.includes(p[2])),
+     pairs.length + " pairs");
+  ok(label + ": no word appears twice within the pack",
+     new Set(pairs.flatMap((p) => [p[0].toLowerCase(), p[1].toLowerCase()])).size === pairs.length * 2);
+  ok(label + ": the two sides of a pair are never the same word",
+     pairs.every((p) => p[0].toLowerCase() !== p[1].toLowerCase()));
+  ok(label + ": every category has pairs behind its chip",
+     cats.every((c) => pairs.some((p) => p[2] === c.id)));
+  // The forgiving guess normaliser must not collapse two words in the same
+  // pack together, or a wrong guess would score.
+  const norm = new Map();
+  let collision = null;
+  for (const [a, b] of pairs)
+    for (const w of [a, b]) {
+      const k = normalizeGuess(w);
+      if (norm.has(k) && norm.get(k) !== w) collision = w + " = " + norm.get(k);
+      norm.set(k, w);
+    }
+  ok(label + ": no two words normalise to the same guess", collision === null, collision || "");
+}
+ok("the packs share no category id — a stale selection cannot cross over",
+   !CATEGORY_IDS.some((c) => DIRTY_CATEGORY_IDS.includes(c)));
+ok("packFor returns the right pack either way",
+   packFor(false).pairs === PAIRS && packFor(true).pairs === DIRTY_PAIRS);
 
 /* ------------------------------------------------------------------ */
 head("Composition and validation");
@@ -227,22 +250,74 @@ ok("multi-word answers work", guessIsCorrect("ice cream", "Ice cream"));
 ok("the paired word is NOT accepted", !guessIsCorrect("Tea", "Coffee"));
 ok("an empty guess is not a win", !guessIsCorrect("", "Coffee"));
 ok("whitespace alone is not a win", !guessIsCorrect("   ", "Coffee"));
-{
-  // The forgiving normaliser must not collapse two different pack words
-  // together, or a wrong guess would score.
-  const norm = new Map();
-  let collision = null;
-  for (const [a, b] of PAIRS) {
-    for (const w of [a, b]) {
-      const k = normalizeGuess(w);
-      if (norm.has(k) && norm.get(k) !== w) collision = w + " ≡ " + norm.get(k);
-      norm.set(k, w);
-    }
-  }
-  ok("no two words in the pack normalise to the same thing", collision === null, collision || "");
-}
 
 /* ------------------------------------------------------------------ */
+head("The rude pack is a swap, not a mix");
+{
+  const rng = mulberry32(4242);
+  const dirtyIds = new Set(DIRTY_PAIRS.map((p) => p[0] + "|" + p[1]));
+  const cleanIds = new Set(PAIRS.map((p) => p[0] + "|" + p[1]));
+  let leakIn = 0, leakOut = 0;
+  for (let i = 0; i < 400; i++) {
+    if (!dirtyIds.has(pickPair(rng, { spicy: true }).id)) leakIn++;
+    if (!cleanIds.has(pickPair(rng, { spicy: false }).id)) leakOut++;
+  }
+  ok("400 spicy draws are all from the rude pack", leakIn === 0, leakIn + " leaked");
+  ok("400 clean draws are all from the clean pack", leakOut === 0, leakOut + " leaked");
+
+  let offCategory = 0;
+  for (let i = 0; i < 200; i++) {
+    const p = pickPair(rng, { spicy: true, categories: ["d-dating", "d-body"] });
+    if (p.category !== "d-dating" && p.category !== "d-body") offCategory++;
+  }
+  ok("category chips filter inside the rude pack", offCategory === 0, offCategory + " off-category");
+
+  // A selection carried over from the other pack would match nothing. The
+  // pool falls back rather than throwing, but the selection must be cleared.
+  let st = initialState();
+  st = reduce(st, { type: "setup/toggleCategory", id: "animals" }, rng);
+  st = reduce(st, { type: "setup/toggleCategory", id: "tech" }, rng);
+  ok("clean categories can be picked", st.setup.categories.length === 2);
+  st = reduce(st, { type: "setup/setPack", spicy: true }, rng);
+  ok("switching packs clears the selection", st.setup.categories.length === 0);
+  ok("and sets the flag", st.setup.spicy === true);
+
+  st = reduce(st, { type: "setup/patch", patch: { players: 6 } }, rng);
+  st = reduce(st, { type: "game/start" }, rng);
+  ok("a spicy game deals a rude pair", dirtyIds.has(st.pair.id), st.pair.civilian + " / " + st.pair.undercover);
+  ok("and every civilian holds the rude civilian word",
+     st.players.filter((p) => p.role === CIVILIAN).every((p) => p.word === st.pair.civilian));
+
+  st = reduce(st, { type: "setup/setPack", spicy: false }, rng);
+  ok("switching back clears again", st.setup.categories.length === 0 && st.setup.spicy === false);
+}
+
+head("Renaming whoever is holding the phone");
+{
+  const rng = mulberry32(808);
+  let st = initialState();
+  st = reduce(st, { type: "setup/patch", patch: { players: 5 } }, rng);
+  st = reduce(st, { type: "game/start" }, rng);
+  ok("everyone starts as a numbered player", st.players[2].name === "Player 3");
+
+  st = reduce(st, { type: "player/rename", id: 2, name: "  Cleo  " }, rng);
+  ok("the dealt player is renamed, trimmed", st.players[2].name === "Cleo");
+  ok("and the setup roster is updated too — this is what makes it stick",
+     st.setup.names[2] === "Cleo");
+  ok("nobody else moved", st.players[1].name === "Player 2" && st.players[3].name === "Player 4");
+
+  ok("an empty rename is refused rather than blanking somebody",
+     reduce(st, { type: "player/rename", id: 2, name: "   " }, rng).players[2].name === "Cleo");
+  ok("a very long name is cut to something that fits the screen",
+     reduce(st, { type: "player/rename", id: 0, name: "x".repeat(60) }, rng)
+       .players[0].name.length === 18);
+
+  const again = reduce({ ...st, phase: "gameover" }, { type: "game/again" }, rng);
+  ok("the name survives into the next game", again.players[2].name === "Cleo");
+  const reset = reduce(again, { type: "game/reset" }, rng);
+  ok("and survives a return to setup", reset.setup.names[2] === "Cleo");
+}
+
 head("The reveal loop cannot skip a player");
 {
   const rng = mulberry32(41);

@@ -12,7 +12,7 @@
  *  away regardless. See revealFor().
  * ------------------------------------------------------------------ */
 
-import { PAIRS } from "./words.js";
+import { packFor } from "./words.js";
 
 export const CIVILIAN = "civilian";
 export const UNDERCOVER = "undercover";
@@ -97,15 +97,16 @@ export function validateSetup({ players, undercovers, mrShakes }) {
 }
 
 export function defaultNames(n) {
-  return Array.from({ length: n }, (_, i) => "Player " + (i + 1));
+  return Array.from({ length: n }, () => "");
 }
 
 /* ---------------- dealing ---------------- */
 
-export function pickPair(rng, { categories = null, used = [] } = {}) {
-  let pool = PAIRS;
+export function pickPair(rng, { categories = null, used = [], spicy = false } = {}) {
+  const all = packFor(spicy).pairs;
+  let pool = all;
   if (categories && categories.length) pool = pool.filter((p) => categories.includes(p[2]));
-  if (!pool.length) pool = PAIRS;
+  if (!pool.length) pool = all;
 
   // Don't repeat a pair until the pack is exhausted, then start over.
   const usedSet = new Set(used);
@@ -267,7 +268,8 @@ export function initialState() {
       ...defaultComposition(6),
       names: defaultNames(6),
       voteMode: "aloud",          // "aloud" | "ballot"
-      categories: [],             // empty means every category
+      spicy: false,               // false = the clean pack
+      categories: [],             // empty means every category in the pack
     },
     usedPairs: [],
     players: [],
@@ -344,7 +346,7 @@ export function reduce(state, action, rng = Math.random) {
       if (action.patch.players !== undefined) {
         const n = clamp(action.patch.players, MIN_PLAYERS, MAX_PLAYERS);
         const names = setup.names.slice(0, n);
-        while (names.length < n) names.push("Player " + (names.length + 1));
+        while (names.length < n) names.push("");
         setup.players = n;
         setup.names = names;
         const impostors = setup.undercovers + setup.mrShakes;
@@ -359,6 +361,16 @@ export function reduce(state, action, rng = Math.random) {
       names[action.index] = action.name;
       return { ...state, setup: { ...state.setup, names } };
     }
+    /* Switching packs MUST clear the category selection in the same step.
+     * The two packs have disjoint category ids, so a selection left over
+     * from the other one would leave every chip looking wrong while the
+     * pool quietly fell back to everything. Hence its own action rather
+     * than a setup/patch. */
+    case "setup/setPack":
+      return {
+        ...state,
+        setup: { ...state.setup, spicy: !!action.spicy, categories: [] },
+      };
     case "setup/toggleCategory": {
       const cur = state.setup.categories;
       const categories = cur.includes(action.id)
@@ -373,6 +385,7 @@ export function reduce(state, action, rng = Math.random) {
       const pair = pickPair(rng, {
         categories: state.setup.categories,
         used: state.usedPairs,
+        spicy: state.setup.spicy,
       });
       const players = dealRoles(state.setup, pair, rng);
       return {
@@ -475,6 +488,21 @@ export function reduce(state, action, rng = Math.random) {
       return afterElimination(next, rng);
     }
 
+    /* Renaming whoever is holding the phone. Writes to BOTH the dealt
+     * player and the setup roster: the first so it shows immediately,
+     * the second so it survives into the next game. Writing only one of
+     * the two is the obvious bug here. */
+    case "player/rename": {
+      const name = String(action.name || "").trim().slice(0, 18);
+      if (!name) return state;
+      const players = state.players.map((p) =>
+        p.id === action.id ? { ...p, name } : p
+      );
+      const names = state.setup.names.slice();
+      if (action.id >= 0 && action.id < names.length) names[action.id] = name;
+      return { ...state, players, setup: { ...state.setup, names } };
+    }
+
     /* ---- between rounds ---- */
     case "round/next":
       return startRound(state, state.players, rng);
@@ -485,6 +513,7 @@ export function reduce(state, action, rng = Math.random) {
       const pair = pickPair(rng, {
         categories: state.setup.categories,
         used: state.usedPairs,
+        spicy: state.setup.spicy,
       });
       const players = dealRoles(state.setup, pair, rng);
       return {

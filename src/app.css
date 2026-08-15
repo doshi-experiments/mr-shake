@@ -307,7 +307,28 @@ h2.subtitle {
   text-align: center;
 }
 
-.names { display: grid; gap: 0.5rem; }
+/* Two across: six to twenty of these otherwise turn the setup screen into
+   a scroll marathon before you reach the button that starts the game. */
+.names { display: grid; gap: 0.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.name-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.name-field__n {
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--mute);
+  flex: 0 0 auto;
+  min-width: 0.75rem;
+}
+.name-field:focus-within { border-color: var(--civilian); }
+.name-field .name-input { border: none; background: transparent; padding-left: 0; }
+.name-field .name-input:focus-visible { outline: none; }
 .name-input {
   width: 100%;
   min-height: 48px;
@@ -528,3 +549,29 @@ h2.subtitle {
   flex-direction: column;
   min-height: 0;
 }
+
+/* The rude pack gets its own colour on the chip, so nobody flips it by
+   accident and nobody is unsure which mode they are in. */
+.chip--rude[aria-pressed="true"] {
+  background: var(--undercover);
+  border-color: var(--undercover);
+}
+
+/* Renaming from the hand-over screen. Deliberately not the same size or
+   position as the primary button below it. */
+.rename__open { margin: 0 auto; }
+.rename { display: grid; gap: 0.625rem; }
+.rename__input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--civilian-soft);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+.rename__input:focus-visible { outline: 3px solid var(--shake); outline-offset: 1px; }

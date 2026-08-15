@@ -4,7 +4,7 @@ import {
   MIN_PLAYERS, MAX_PLAYERS, MIN_PLAYERS_FOR_MRSHAKE,
   initialState, reduce, validateSetup, living, counts, revealFor,
 } from "./game.js";
-import { CATEGORIES } from "./words.js";
+import { packFor } from "./words.js";
 
 /* ------------------------------------------------------------------ *
  *  Theme — the same cookie the portfolio and the experiments index
@@ -43,6 +43,7 @@ function applyTheme(t) {
  * ------------------------------------------------------------------ */
 
 const SAVE_KEY = "mr-shake:game";
+const SETUP_KEY = "mr-shake:setup";
 
 /* A game in progress survives a reload, a phone locking, or somebody
  * hitting back. Without this, one accidental swipe ends the evening.
@@ -50,17 +51,25 @@ const SAVE_KEY = "mr-shake:game";
  * tab closes, which is the right lifetime for a hand of cards. */
 function useGame() {
   const [state, rawDispatch] = useReducer(reduce, undefined, () => {
+    const base = initialState();
+    // The table is a preference and outlives the tab; the game in progress
+    // is a hand of cards and belongs to it. Two stores, two lifetimes.
+    try {
+      const savedSetup = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
+      if (savedSetup && Array.isArray(savedSetup.names))
+        base.setup = { ...base.setup, ...savedSetup };
+    } catch (e) {}
     try {
       const saved = sessionStorage.getItem(SAVE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         // Guard against a shape from an older build.
         if (parsed && typeof parsed.phase === "string" && parsed.setup) {
-          return { ...initialState(), ...parsed };
+          return { ...base, ...parsed };
         }
       }
     } catch (e) {}
-    return initialState();
+    return base;
   });
 
   useEffect(() => {
@@ -69,6 +78,12 @@ function useGame() {
       else sessionStorage.setItem(SAVE_KEY, JSON.stringify(state));
     } catch (e) {}
   }, [state]);
+
+  // Names, counts, vote mode and pack survive the tab closing, so a group
+  // that plays every week types itself in once.
+  useEffect(() => {
+    try { localStorage.setItem(SETUP_KEY, JSON.stringify(state.setup)); } catch (e) {}
+  }, [state.setup]);
 
   const dispatch = useCallback((action) => rawDispatch(action), []);
   return [state, dispatch];
@@ -200,8 +215,9 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
 
 function Setup({ state, dispatch }) {
   const s = state.setup;
-  const [showNames, setShowNames] = useState(false);
   const errors = validateSetup(s);
+  // Chips come from whichever pack is selected; the two have disjoint ids.
+  const categories = packFor(s.spicy).categories;
   const impostors = s.undercovers + s.mrShakes;
   const maxImpostors = Math.max(0, Math.ceil(s.players / 2) - 1);
 
@@ -221,6 +237,31 @@ function Setup({ state, dispatch }) {
       <Stepper label="Players" value={s.players} min={MIN_PLAYERS} max={MAX_PLAYERS}
                onChange={(v) => patch({ players: v })}
                suffix={s.players + " people, one phone"} />
+
+      <div className="stack--tight stack">
+        <span className="label">Who's playing</span>
+        <div className="names">
+          {s.names.map((n, i) => (
+            <label key={i} className="name-field">
+              <span className="name-field__n">{i + 1}</span>
+              <input
+                className="name-input"
+                value={n}
+                aria-label={"Name of player " + (i + 1)}
+                placeholder={"Player " + (i + 1)}
+                maxLength={18}
+                autoCapitalize="words"
+                autoCorrect="off"
+                onChange={(e) => dispatch({ type: "setup/name", index: i, name: e.target.value })}
+              />
+            </label>
+          ))}
+        </div>
+        <p className="fine">
+          Blanks stay as Player 1, Player 2 and so on. Names are remembered for
+          next time, and anyone can fix theirs when the phone reaches them.
+        </p>
+      </div>
 
       <div className="stack--tight stack">
         <span className="label">Who they are</span>
@@ -267,9 +308,28 @@ function Setup({ state, dispatch }) {
       </div>
 
       <div className="stack--tight stack">
-        <span className="label">Words to draw from</span>
+        <span className="label">Words</span>
+        <div className="segmented">
+          <button type="button" className="chip" aria-pressed={!s.spicy}
+                  onClick={() => dispatch({ type: "setup/setPack", spicy: false })}>
+            Clean
+          </button>
+          <button type="button" className="chip chip--rude" aria-pressed={!!s.spicy}
+                  onClick={() => dispatch({ type: "setup/setPack", spicy: true })}>
+            Rude
+          </button>
+        </div>
+        <p className="fine">
+          {s.spicy
+            ? "Dating, hangovers, bad habits and a lot of innuendo. Nothing you couldn't say at a work party, but read the room."
+            : "Everyday things — food, animals, places, films. Fine for any table."}
+        </p>
+      </div>
+
+      <div className="stack--tight stack">
+        <span className="label">Narrow it down</span>
         <div className="chips">
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <button key={c.id} type="button" className="chip"
                     aria-pressed={s.categories.includes(c.id)}
                     onClick={() => dispatch({ type: "setup/toggleCategory", id: c.id })}>
@@ -280,23 +340,6 @@ function Setup({ state, dispatch }) {
         <p className="fine">
           {s.categories.length ? "Drawing from your picks." : "Nothing picked, so anything can come up."}
         </p>
-      </div>
-
-      <div className="stack--tight stack">
-        <button type="button" className="btn btn--ghost btn--small"
-                onClick={() => setShowNames((v) => !v)}>
-          {showNames ? "Hide names" : "Use names instead of numbers"}
-        </button>
-        {showNames && (
-          <div className="names">
-            {s.names.map((n, i) => (
-              <input key={i} className="name-input" value={n}
-                     aria-label={"Name of player " + (i + 1)}
-                     maxLength={18}
-                     onChange={(e) => dispatch({ type: "setup/name", index: i, name: e.target.value })} />
-            ))}
-          </div>
-        )}
       </div>
 
       <button type="button" className="btn btn--primary btn--tall"
@@ -318,6 +361,74 @@ function Setup({ state, dispatch }) {
  *  anybody or shows one player another player's word.
  * ------------------------------------------------------------------ */
 
+/* The hand-over screen, with an escape hatch for whoever was left as a
+ * number. Two constraints, both load-bearing:
+ *
+ *  1. The rename control sits ABOVE the primary button and is visually
+ *     secondary, so it never occupies the primary button's position. The
+ *     reveal's whole safety argument rests on adjacent steps not sharing
+ *     coordinates.
+ *  2. While the input is open the primary button is gone entirely, so a
+ *     tap aimed through a phone keyboard cannot advance the reveal with a
+ *     half-typed name behind it.
+ */
+function PassScreen({ player, index, total, locked, onAccept, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(player.name);
+
+  // A new player means a new card; never carry a half-typed name across.
+  useEffect(() => { setEditing(false); setDraft(player.name); }, [player.id, player.name]);
+
+  const save = () => {
+    if (draft.trim()) onRename(draft);
+    setEditing(false);
+  };
+
+  return (
+    <div className="stage center stack--loose">
+      <div className="stack--tight stack">
+        <p className="eyebrow">Player {index + 1} of {total}</p>
+        <p className="lede">Pass the phone to</p>
+        {editing ? (
+          <form className="rename" onSubmit={(e) => { e.preventDefault(); save(); }}>
+            <input
+              className="rename__input"
+              value={draft}
+              autoFocus
+              aria-label="Your name"
+              maxLength={18}
+              autoCapitalize="words"
+              autoCorrect="off"
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <button type="submit" className="btn btn--primary" disabled={!draft.trim()}>
+              Save
+            </button>
+          </form>
+        ) : (
+          <p className="who">{player.name}</p>
+        )}
+      </div>
+
+      {!editing && (
+        <>
+          <button type="button" className="btn btn--ghost btn--small rename__open"
+                  onClick={() => { setDraft(player.name); setEditing(true); }}>
+            Not {player.name}?
+          </button>
+          {/* Centre of the screen — the same place the reveal tap lands, so
+              a double tap here only ever gets you to a face-down card. */}
+          <button type="button" className="btn btn--primary btn--tall" disabled={locked}
+                  onClick={onAccept}>
+            I'm {player.name}
+          </button>
+          <p className="fine">Nobody else should be looking.</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Reveal({ state, dispatch }) {
   const player = state.players[state.revealIndex];
   const stage = state.revealStage;
@@ -327,20 +438,14 @@ function Reveal({ state, dispatch }) {
 
   if (stage === "pass") {
     return (
-      <div className="stage center stack--loose">
-        <div className="stack--tight stack">
-          <p className="eyebrow">Player {state.revealIndex + 1} of {total}</p>
-          <p className="lede">Pass the phone to</p>
-          <p className="who">{player.name}</p>
-        </div>
-        {/* Centre of the screen — the same place the reveal tap lands, so
-            a double tap here only ever gets you to a face-down card. */}
-        <button type="button" className="btn btn--primary btn--tall" disabled={locked}
-                onClick={() => dispatch({ type: "reveal/accept" })}>
-          I'm {player.name}
-        </button>
-        <p className="fine">Nobody else should be looking.</p>
-      </div>
+      <PassScreen
+        player={player}
+        index={state.revealIndex}
+        total={total}
+        locked={locked}
+        onAccept={() => dispatch({ type: "reveal/accept" })}
+        onRename={(name) => dispatch({ type: "player/rename", id: player.id, name })}
+      />
     );
   }
 

@@ -86,7 +86,7 @@ const evalJs = async (expr) => {
 const go = async () => {
   await S("Page.navigate", { url: BASE });
   await sleep(400);
-  await evalJs("sessionStorage.clear()");
+  await evalJs("sessionStorage.clear(); localStorage.removeItem('mr-shake:setup')");
   await S("Page.reload", {});
   await sleep(900);
 };
@@ -108,6 +108,13 @@ const clickExact = (label) => evalJs(`(() => {
   if (!el) return false; el.click(); return true;
 })()`);
 const phase = () => evalJs("document.querySelector('.app').dataset.phase");
+
+// Read the packs straight from source so the browser assertions compare
+// against the same data the app ships.
+const { PAIRS, DIRTY_PAIRS } = await import("../src/words.js");
+const idsOf = (pairs) => new Set(pairs.map((p) => [p[0], p[1]].sort().join("|")));
+const CLEAN_IDS = idsOf(PAIRS);
+const RUDE_IDS = idsOf(DIRTY_PAIRS);
 const stepper = (label, dir) => evalJs(`(() => {
   const el = [...document.querySelectorAll('button')]
     .find(b => b.getAttribute('aria-label') === ${JSON.stringify((dir < 0 ? "Fewer " : "More ") + label)});
@@ -133,8 +140,8 @@ head("Setup controls");
   ok("the player stepper moves", before !== after, before + " → " + after + " players");
   await stepper("players", -1); await sleep(150);
 
-  await click("use names instead"); await sleep(200);
-  ok("names can be opened", await evalJs("document.querySelectorAll('.name-input').length > 0"));
+  ok("the name fields are visible without hunting for them",
+     await evalJs("document.querySelectorAll('.name-input').length > 0"));
   const n = await evalJs("document.querySelectorAll('.name-input').length");
   ok("there is one field per player", n === 6, n + " fields");
 
@@ -150,6 +157,129 @@ head("Setup controls");
 }
 
 /* ---------------------------------------------------------------- */
+head("Real names");
+await go();
+const NAMES = ["Ava", "Ben", "Cleo", "Dev", "Esme", ""];
+const typeName = (i, v) => evalJs(`(() => {
+  const el = document.querySelectorAll('.name-input')[${i}];
+  const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
+  set.call(el, ${JSON.stringify("")} + ${JSON.stringify(v)});
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  return true;
+})()`);
+{
+  for (let i = 0; i < NAMES.length; i++) if (NAMES[i]) await typeName(i, NAMES[i]);
+  await sleep(300);
+  await click("deal the words"); await sleep(STEP);
+  ok("the hand-over screen uses the typed name",
+     (await evalJs("document.querySelector('.who').textContent")) === "Ava");
+  ok("and so does the button", (await text()).includes("i'm ava"));
+  await shot("10-pass-named");
+
+  // Walk to the sixth player, who was left blank.
+  for (let i = 0; i < 5; i++) {
+    await click("i'm"); await sleep(STEP);
+    await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
+    await click("hide and"); await sleep(STEP);
+  }
+  ok("a blank field still falls back to a number",
+     (await evalJs("document.querySelector('.who').textContent")) === "Player 6");
+}
+
+head("Renaming from the hand-over screen");
+{
+  ok("there is a way out for whoever was left as a number", await click("not player 6"));
+  await sleep(300);
+  ok("the primary button is gone while the keyboard is open",
+     !(await evalJs(`!![...document.querySelectorAll('button')].find(b => b.textContent.includes("I'm"))`)));
+  await evalJs(`(() => {
+    const el = document.querySelector('.rename__input');
+    const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
+    set.call(el, 'Finn');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await sleep(200);
+  await click("save"); await sleep(400);
+  ok("the new name sticks", (await evalJs("document.querySelector('.who').textContent")) === "Finn");
+  ok("and it reached the setup roster, so it survives the next game",
+     (await evalJs("JSON.parse(localStorage.getItem('mr-shake:setup')).names[5]")) === "Finn");
+
+  // The safety argument depends on these two never sharing coordinates.
+  const overlap = await evalJs(`(() => {
+    const bs = [...document.querySelectorAll('button')];
+    const rename = bs.find(b => b.textContent.startsWith('Not '));
+    const primary = bs.find(b => b.textContent.includes("I'm"));
+    if (!rename || !primary) return 'missing';
+    const a = rename.getBoundingClientRect(), b = primary.getBoundingClientRect();
+    return !(a.bottom <= b.top || b.bottom <= a.top);
+  })()`);
+  ok("the rename control never overlaps the primary button", overlap === false, String(overlap));
+
+  // And the reveal guards still hold with a renamed player in the seat.
+  await sleep(STEP);
+  await evalJs(`(() => {
+    const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes("I'm"));
+    b.click(); setTimeout(() => { if (!b.disabled) b.click(); }, 60);
+  })()`);
+  await sleep(STEP);
+  ok("a double-tap after renaming still lands on the face-down card",
+     (await text()).includes("tap to see your word") && (await text()).includes("finn"));
+}
+
+head("The rude pack");
+await go();
+{
+  const cleanChips = await evalJs("[...document.querySelectorAll('.chips .chip')].map(c=>c.textContent)");
+  ok("the clean chips are the everyday categories", cleanChips.includes("Animals"), cleanChips.length + " chips");
+  ok("it starts clean",
+     await evalJs(`[...document.querySelectorAll('.chip')].find(c=>c.textContent==='Clean').getAttribute('aria-pressed')==='true'`));
+
+  await clickExact("Rude"); await sleep(300);
+  const rudeChips = await evalJs("[...document.querySelectorAll('.chips .chip')].map(c=>c.textContent)");
+  ok("flipping it swaps the categories", !rudeChips.includes("Animals") && rudeChips.includes("Dating"),
+     rudeChips.join(", "));
+  ok("and the note changes", (await text()).includes("read the room"));
+  await shot("11-setup-rude");
+
+  await click("deal the words"); await sleep(STEP);
+  await click("i'm"); await sleep(STEP);
+  await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
+  const inRude = await evalJs(`(() => {
+    const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
+    return { civ: s.pair.civilian, und: s.pair.undercover, spicy: s.setup.spicy };
+  })()`);
+  ok("the game is flagged spicy", inRude.spicy === true);
+  await shot("12-word-rude");
+
+  // Prove the word is from the rude pack and not the clean one.
+  const verdict = await evalJs(`(() => {
+    const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
+    return s.pair.civilian + "|" + s.pair.undercover;
+  })()`);
+  ok("a rude pair was dealt", RUDE_IDS.has(verdict.split("|").sort().join("|")),
+     inRude.civ + " / " + inRude.und);
+  ok("and it is not in the clean pack", !CLEAN_IDS.has(verdict.split("|").sort().join("|")));
+
+  // Switching back must clear the selection rather than stranding it.
+  await evalJs("sessionStorage.clear()");
+  await reload();
+  ok("the pack choice was remembered across a reload",
+     await evalJs(`[...document.querySelectorAll('.chip')].find(c=>c.textContent==='Rude').getAttribute('aria-pressed')==='true'`));
+  await evalJs(`[...document.querySelectorAll('.chips .chip')][0].click()`); await sleep(250);
+  await clickExact("Clean"); await sleep(300);
+  ok("switching back drops the rude category selection",
+     (await evalJs("JSON.parse(localStorage.getItem('mr-shake:setup')).categories.length")) === 0);
+}
+
+head("The table is remembered");
+{
+  await go();
+  await typeName(0, "Zara"); await sleep(300);
+  await reload();
+  ok("names survive a reload of the setup screen",
+     (await evalJs("document.querySelectorAll('.name-input')[0].value")) === "Zara");
+}
+
 head("The reveal cannot be double-tapped past a player");
 await go();
 await click("deal the words");

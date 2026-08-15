@@ -225,25 +225,173 @@ export const PAIRS = [
   ["Apology", "Excuse", "life"],
 ];
 
-export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
+/* ------------------------------------------------------------------ *
+ *  The rude pack
+ *
+ *  Cheeky rather than explicit, and that is a design decision before it
+ *  is a taste one. The mechanic needs a word you can gesture at
+ *  sideways for one clue; graphic anatomy collapses a round into
+ *  laughing instead of deducing, and the two halves of an explicit pair
+ *  usually read as the same thing, which kills the signal the whole
+ *  game runs on. Dating, hangovers and bad habits give clues somewhere
+ *  to go.
+ *
+ *  Category ids are prefixed `d-` so a stale selection left over from
+ *  the clean pack can never silently match one of these.
+ * ------------------------------------------------------------------ */
 
-/* Static data, so this either always passes or always throws. A pair
- * tagged with a category that has no chip would be unreachable from the
- * setup screen — invisible, and only in one filter combination. */
-{
-  const known = new Set(CATEGORY_IDS);
-  const orphans = [...new Set(PAIRS.map((p) => p[2]).filter((c) => !known.has(c)))];
-  if (orphans.length) throw new Error("pairs in unknown categories: " + orphans.join(", "));
-  const empty = CATEGORY_IDS.filter((c) => !PAIRS.some((p) => p[2] === c));
-  if (empty.length) throw new Error("categories with no pairs: " + empty.join(", "));
-  // A word appearing in two pairs makes a game ambiguous when both are drawn
-  // in one session, and usually means a copy-paste slip.
-  const seen = new Map();
-  for (const [a, b] of PAIRS) {
+export const DIRTY_CATEGORIES = [
+  { id: "d-dating", name: "Dating" },
+  { id: "d-night", name: "Big night out" },
+  { id: "d-body", name: "Body" },
+  { id: "d-habits", name: "Bad habits" },
+  { id: "d-life", name: "Grown-up life" },
+];
+
+export const DIRTY_PAIRS = [
+  // ---- Dating ----
+  ["One-night stand", "First date", "d-dating"],
+  ["Ghosting", "Breadcrumbing", "d-dating"],
+  ["Situationship", "Friends with benefits", "d-dating"],
+  ["Dating app", "Speed dating", "d-dating"],
+  ["Booty call", "Drunk text", "d-dating"],
+  ["Wingman", "Third wheel", "d-dating"],
+  ["Netflix and chill", "Movie night", "d-dating"],
+  ["Sexting", "Flirting", "d-dating"],
+  ["Hickey", "Bruise", "d-dating"],
+  ["Blind date", "Set-up", "d-dating"],
+  ["Cuffing season", "Summer fling", "d-dating"],
+  ["Rebound", "Crush", "d-dating"],
+  ["Lap dance", "Slow dance", "d-dating"],
+  ["Making out", "Holding hands", "d-dating"],
+  ["Dirty talk", "Sweet nothings", "d-dating"],
+  ["Red flag", "Green flag", "d-dating"],
+  ["Break-up text", "Break-up call", "d-dating"],
+  ["Ex", "In-law", "d-dating"],
+  ["Proposal", "Ultimatum", "d-dating"],
+  ["Lingerie", "Pyjamas", "d-dating"],
+
+  // ---- Big night out ----
+  ["Hangover", "Still drunk", "d-night"],
+  ["Beer goggles", "Rose-tinted glasses", "d-night"],
+  ["Tequila shot", "Vodka shot", "d-night"],
+  ["Body shot", "Shotgunning a beer", "d-night"],
+  ["Hen party", "Stag do", "d-night"],
+  ["Strip club", "Burlesque", "d-night"],
+  ["Bar crawl", "Wine tasting", "d-night"],
+  ["Kebab at 3am", "Brunch", "d-night"],
+  ["Blacking out", "Passing out", "d-night"],
+  ["Drunk dial", "Butt dial", "d-night"],
+  ["Dance floor", "Mosh pit", "d-night"],
+  ["Nightclub", "House party", "d-night"],
+  ["Bouncer", "Bartender", "d-night"],
+  ["Last call", "Lock-in", "d-night"],
+  ["Hair of the dog", "Greasy fry-up", "d-night"],
+  ["Pre-drinks", "Afters", "d-night"],
+  ["Designated driver", "Taxi home", "d-night"],
+  ["Bar tab", "Round of drinks", "d-night"],
+  ["Throwing up", "The spins", "d-night"],
+  ["Karaoke at midnight", "Open mic", "d-night"],
+
+  // ---- Body ----
+  ["Thong", "Boxers", "d-body"],
+  ["Push-up bra", "Corset", "d-body"],
+  ["Skinny dipping", "Nude beach", "d-body"],
+  ["Nudes", "Selfie", "d-body"],
+  ["Bikini wax", "Shaving", "d-body"],
+  ["Six-pack", "Dad bod", "d-body"],
+  ["Botox", "Filler", "d-body"],
+  ["Spray tan", "Sunburn", "d-body"],
+  ["Cleavage", "Low neckline", "d-body"],
+  ["Sweat patch", "Deodorant", "d-body"],
+  ["Bad breath", "Body odour", "d-body"],
+  ["Farting", "Burping", "d-body"],
+  ["Muffin top", "Love handles", "d-body"],
+  ["Bedhead", "Hat hair", "d-body"],
+  ["Chest hair", "Beard", "d-body"],
+  ["Tan lines", "Freckles", "d-body"],
+  ["Cold shower", "Ice bath", "d-body"],
+  ["Morning breath", "Garlic breath", "d-body"],
+
+  // ---- Bad habits ----
+  ["Vape", "Cigarette", "d-habits"],
+  ["Weed", "Tobacco", "d-habits"],
+  ["Gambling", "Lottery", "d-habits"],
+  ["Doomscrolling", "Binge-watching", "d-habits"],
+  ["Procrastinating", "Napping", "d-habits"],
+  ["Biting your nails", "Cracking your knuckles", "d-habits"],
+  ["Snitching", "Gossiping", "d-habits"],
+  ["White lie", "Excuse", "d-habits"],
+  ["Calling in sick", "Working from home", "d-habits"],
+  ["Stalking an ex online", "Reading old texts", "d-habits"],
+  ["Impulse buy", "Spending spree", "d-habits"],
+  ["Energy drink", "Double espresso", "d-habits"],
+  ["Midnight snack", "Second dinner", "d-habits"],
+  ["Being late", "Cancelling last minute", "d-habits"],
+  ["Oversharing", "Humblebrag", "d-habits"],
+  ["Silent treatment", "Petty revenge", "d-habits"],
+  ["Eavesdropping", "Snooping", "d-habits"],
+
+  // ---- Grown-up life ----
+  ["Divorce", "Break-up", "d-life"],
+  ["Prenup", "Marriage licence", "d-life"],
+  ["Overdraft", "Payday loan", "d-life"],
+  ["Credit card debt", "Student loan", "d-life"],
+  ["Awkward silence", "Lift ride", "d-life"],
+  ["Office party", "Family dinner", "d-life"],
+  ["In-laws visiting", "Landlord inspection", "d-life"],
+  ["Therapy", "Venting to a friend", "d-life"],
+  ["Midlife crisis", "Gap year", "d-life"],
+  ["Fake ID", "Borrowed badge", "d-life"],
+  ["Speeding ticket", "Parking fine", "d-life"],
+  ["Group chat", "Private message", "d-life"],
+  ["Sugar daddy", "Rich uncle", "d-life"],
+  ["Hot tub", "Sauna", "d-life"],
+  ["Massage", "Chiropractor", "d-life"],
+];
+
+/* Picking a pack is a one-liner everywhere it is needed, and there is
+ * exactly one place that decides which array is in play. */
+export const packFor = (spicy) =>
+  spicy
+    ? { pairs: DIRTY_PAIRS, categories: DIRTY_CATEGORIES }
+    : { pairs: PAIRS, categories: CATEGORIES };
+
+export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
+export const DIRTY_CATEGORY_IDS = DIRTY_CATEGORIES.map((c) => c.id);
+
+/* Static data, so this either always passes or always throws. Scoped
+ * PER PACK: a game only ever draws from one of them, so a word is free
+ * to appear in both where it genuinely belongs in both — but never
+ * twice within the pack that is actually in play. */
+for (const [label, pairs, categories] of [
+  ["clean", PAIRS, CATEGORIES],
+  ["rude", DIRTY_PAIRS, DIRTY_CATEGORIES],
+]) {
+  const ids = categories.map((c) => c.id);
+  const known = new Set(ids);
+  // A pair tagged with a category that has no chip is unreachable from the
+  // setup screen — invisible, and only in one filter combination.
+  const orphans = [...new Set(pairs.map((p) => p[2]).filter((c) => !known.has(c)))];
+  if (orphans.length)
+    throw new Error(label + " pairs in unknown categories: " + orphans.join(", "));
+  const empty = ids.filter((c) => !pairs.some((p) => p[2] === c));
+  if (empty.length)
+    throw new Error(label + " categories with no pairs: " + empty.join(", "));
+  const seen = new Set();
+  for (const [a, b] of pairs) {
     for (const w of [a, b]) {
       const k = w.toLowerCase();
-      if (seen.has(k)) throw new Error('"' + w + '" appears in more than one pair');
-      seen.set(k, true);
+      if (seen.has(k))
+        throw new Error('"' + w + '" appears in more than one ' + label + " pair");
+      seen.add(k);
     }
   }
+}
+
+// The two packs must not share a category id, or a selection made in one
+// would survive a switch and quietly filter the other.
+{
+  const overlap = CATEGORY_IDS.filter((c) => DIRTY_CATEGORY_IDS.includes(c));
+  if (overlap.length) throw new Error("category ids shared between packs: " + overlap.join(", "));
 }
