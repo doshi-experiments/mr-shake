@@ -36,19 +36,42 @@ being a game and being a formality:
 
 ## The words
 
-176 pairs across ten categories, in `src/words.js`. A pair only works inside a
-narrow band. Too far apart and the first clue exposes the impostor — nobody
-describes *Apple* and *Car* the same way. Too close and there is no signal at
-all: *Sofa* and *Couch* produce identical clues and the round is a coin flip.
+266 pairs in `src/words.js`, split across two packs the setup screen switches
+between. A pair only works inside a narrow band. Too far apart and the first
+clue exposes the impostor — nobody describes *Apple* and *Car* the same way.
+Too close and there is no signal at all: *Sofa* and *Couch* produce identical
+clues and the round is a coin flip.
 
 What works is same category, most attributes shared, one or two salient
 differences: `Coffee / Tea`, `Butterfly / Moth`, `Hotel / Motel`,
 `Alligator / Crocodile`, `Museum / Art gallery`. Both sides also have to be
 describable without saying them, which rules out most abstract nouns.
 
-Adding pairs means adding rows to `PAIRS`. A module-level assertion throws if a
-word appears in two pairs or a pair is tagged with a category that has no chip
-on the setup screen — both are invisible on screen and only bite occasionally.
+**Clean** — 176 pairs across ten categories, in `PAIRS`. Food, animals, places,
+films, travel, everyday life. Fine for any table.
+
+**Rude** — 90 pairs across five categories, in `DIRTY_PAIRS`: Dating, Big night
+out, Body, Bad habits, Grown-up life. Cheeky rather than explicit, and that is a
+design decision before it is a taste one. The mechanic needs a word you can
+gesture at sideways for one clue; graphic anatomy collapses a round into
+laughing instead of deducing, and the two halves of an explicit pair usually
+read as the same thing, which kills the signal the whole game runs on.
+`Hangover / Still drunk` and `Ghosting / Breadcrumbing` give clues somewhere to
+go in a way that a pair of body parts does not.
+
+The packs are a swap, not a mix. A game draws from exactly one of them, chosen
+before the deal and carried through *play again*, and `packFor(spicy)` is the
+single place that decides which. Rude category ids are prefixed `d-` so they
+cannot collide with clean ones, and switching packs clears the category
+selection outright — a stale filter that silently matched nothing would look
+like the game had run out of words.
+
+Adding pairs means adding rows to `PAIRS` or `DIRTY_PAIRS`. Module-level
+assertions run per pack and throw if a word appears in two pairs within its own
+pack, if a pair is tagged with a category that has no chip on the setup screen,
+or if a category has no pairs at all — each is invisible on screen and only
+bites occasionally. Duplication *across* packs is allowed, since a word that
+belongs in both can never be drawn twice in one game.
 
 ## Shared-screen secrecy
 
@@ -92,7 +115,7 @@ screen up during discussion, where supported.
 
 ```
 src/game.js      the rules. Pure — no React, no DOM, no Math.random
-src/words.js     the word pack
+src/words.js     both word packs, clean and rude
 src/App.jsx      screens and components
 src/app.css      tokens, theme, layout
 src/main.jsx     entry point, registers the service worker
@@ -107,11 +130,11 @@ straight into Node with no build step.
 ## Tests
 
 ```bash
-npm test                     # rules — 76 assertions
+npm test                     # rules — 100 assertions
 
 ./build.sh
 node test/serve.mjs &        # serves dist/ on 8123
-node test/e2e.mjs            # browser — 46 assertions, 390×844
+node test/e2e.mjs            # browser — 65 assertions, 390×844
 ```
 
 The rules suite runs 800 seeded playthroughs across both vote modes and
@@ -122,9 +145,18 @@ payload and an undercover's are **the same shape** — if either is ever told
 which they are, the game is destroyed while still looking perfectly reasonable
 on screen.
 
+Both packs are checked the same way, and the swap is tested rather than assumed:
+400 draws from each are asserted to come entirely from the pack that was
+selected, switching packs is asserted to clear the category selection, and a
+spicy game is played through far enough to confirm every civilian is holding a
+word from `DIRTY_PAIRS`.
+
 The browser suite fires two clicks 60 ms apart at each step of the reveal and
 checks the player index moved by exactly one, reloads mid-reveal to confirm
-nothing is exposed, and plays complete games both ways round.
+nothing is exposed, and plays complete games both ways round. It also flips the
+pack on the setup screen, confirms the category chips swap with it, and reads
+the dealt pair back out of the running game to prove it came from the rude
+pack.
 
 ## Build and deploy
 
