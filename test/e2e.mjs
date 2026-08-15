@@ -111,10 +111,11 @@ const phase = () => evalJs("document.querySelector('.app').dataset.phase");
 
 // Read the packs straight from source so the browser assertions compare
 // against the same data the app ships.
-const { PAIRS, DIRTY_PAIRS } = await import("../src/words.js");
+const { PAIRS, DIRTY_PAIRS, EXPLICIT_PAIRS } = await import("../src/words.js");
 const idsOf = (pairs) => new Set(pairs.map((p) => [p[0], p[1]].sort().join("|")));
 const CLEAN_IDS = idsOf(PAIRS);
 const RUDE_IDS = idsOf(DIRTY_PAIRS);
+const EXPLICIT_IDS = idsOf(EXPLICIT_PAIRS);
 const stepper = (label, dir) => evalJs(`(() => {
   const el = [...document.querySelectorAll('button')]
     .find(b => b.getAttribute('aria-label') === ${JSON.stringify((dir < 0 ? "Fewer " : "More ") + label)});
@@ -246,9 +247,9 @@ await go();
   await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
   const inRude = await evalJs(`(() => {
     const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
-    return { civ: s.pair.civilian, und: s.pair.undercover, spicy: s.setup.spicy };
+    return { civ: s.pair.civilian, und: s.pair.undercover, pack: s.setup.pack };
   })()`);
-  ok("the game is flagged spicy", inRude.spicy === true);
+  ok("the game records the rude pack", inRude.pack === "rude", inRude.pack);
   await shot("12-word-rude");
 
   // Prove the word is from the rude pack and not the clean one.
@@ -269,6 +270,51 @@ await go();
   await clickExact("Clean"); await sleep(300);
   ok("switching back drops the rude category selection",
      (await evalJs("JSON.parse(localStorage.getItem('mr-shake:setup')).categories.length")) === 0);
+}
+
+head("The explicit pack");
+await go();
+{
+  await clickExact("Explicit"); await sleep(300);
+  const chips = await evalJs("[...document.querySelectorAll('.chips .chip')].map(c=>c.textContent)");
+  ok("its categories replace both other sets",
+     chips.includes("Kinks") && !chips.includes("Dating") && !chips.includes("Animals"),
+     chips.join(", "));
+  ok("and the note says plainly what it is", (await text()).includes("no euphemism"));
+  await shot("13-setup-explicit");
+
+  await click("deal the words"); await sleep(STEP);
+  await click("i'm"); await sleep(STEP);
+  await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
+  const dealt = await evalJs(`(() => {
+    const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
+    return { id: s.pair.civilian + "|" + s.pair.undercover, pack: s.setup.pack };
+  })()`);
+  ok("an explicit pair was dealt",
+     EXPLICIT_IDS.has(dealt.id.split("|").sort().join("|")), dealt.id);
+  ok("and it is in neither other pack",
+     !CLEAN_IDS.has(dealt.id.split("|").sort().join("|")) &&
+     !RUDE_IDS.has(dealt.id.split("|").sort().join("|")));
+  ok("the game records the explicit pack", dealt.pack === "explicit", dealt.pack);
+  await shot("14-word-explicit");
+}
+
+head("A setup saved by the two-pack build still opens");
+await go();
+{
+  // Exactly what the previous version wrote: a boolean, and no `pack` key.
+  await evalJs(`(() => {
+    const s = JSON.parse(localStorage.getItem('mr-shake:setup'));
+    delete s.pack; s.spicy = true;
+    localStorage.setItem('mr-shake:setup', JSON.stringify(s));
+    sessionStorage.clear();
+  })()`);
+  await reload();
+  ok("spicy:true comes back as the rude pack, not a dead selection",
+     await evalJs(`[...document.querySelectorAll('.chip')].find(c=>c.textContent==='Rude').getAttribute('aria-pressed')==='true'`));
+  ok("and the rude categories are on screen",
+     (await evalJs("[...document.querySelectorAll('.chips .chip')].map(c=>c.textContent)")).includes("Dating"));
+  await evalJs("localStorage.removeItem('mr-shake:setup'); sessionStorage.clear()");
 }
 
 head("The table is remembered");
@@ -475,6 +521,93 @@ await go();
 }
 
 /* ---------------------------------------------------------------- */
+head("Looking at your own word again mid-round");
+await go();
+{
+  await click("deal the words"); await sleep(STEP);
+
+  // Deal everyone in, remembering what each seat was actually given.
+  const dealt = [];
+  for (let i = 0; i < 6; i++) {
+    await click("i'm"); await sleep(STEP);
+    await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
+    dealt.push(await evalJs("document.querySelector('.word-card .word')?.textContent || ''"));
+    await click("hide and"); await sleep(STEP);
+  }
+  ok("round one is under way", (await phase()) === "describe");
+
+  const eyes = await evalJs("document.querySelectorAll('.order-peek').length");
+  ok("every name in the speaking order has an eye beside it", eyes === 6, eyes + " eyes");
+
+  // The eye is a second control inside the row, so tapping it must not also
+  // strike the name through as "already spoken".
+  const rowName = await evalJs("document.querySelectorAll('.order-item__name')[0].textContent");
+  await evalJs("document.querySelectorAll('.order-peek')[0].click()");
+  await sleep(STEP);
+  const seat = await evalJs("document.querySelector('.who')?.textContent || ''");
+  ok("it opens a hand-over screen naming that player", seat === rowName, seat + " / row said " + rowName);
+  ok("and no word is on screen yet",
+     !(await evalJs("!!document.querySelector('.word-card .word')")));
+
+  await click("i'm"); await sleep(STEP);
+  ok("the card arrives face down",
+     await evalJs("!!document.querySelector('.word-card--face-down')"));
+  await evalJs("document.querySelector('.word-card--face-down').click()"); await sleep(STEP);
+
+  const shown = await evalJs("document.querySelector('.word-card .word')?.textContent || ''");
+  ok("the word shown is the one that seat was dealt", dealt.includes(shown), shown);
+
+  await click("hide and carry on"); await sleep(STEP);
+  ok("and it goes back to the describe list", (await phase()) === "describe");
+  ok("without marking anybody as having spoken",
+     (await evalJs(`document.querySelectorAll('.order-item[aria-pressed="true"]').length`)) === 0);
+
+  // "Never mind" has to back out without showing anything at all.
+  await evalJs("document.querySelectorAll('.order-peek')[1].click()"); await sleep(STEP);
+  await click("never mind"); await sleep(STEP);
+  ok("backing out of a peek shows no word", (await phase()) === "describe" &&
+     !(await evalJs("!!document.querySelector('.word-card .word')")));
+}
+
+head("Voting somebody out gives nothing away");
+{
+  const pair = await evalJs(`(() => {
+    const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
+    return [s.pair.civilian, s.pair.undercover];
+  })()`);
+
+  await click("everyone's spoken"); await sleep(STEP);
+  await evalJs("document.querySelector('.player-btn').click()"); await sleep(250);
+  await click("yes, they're out"); await sleep(STEP);
+
+  // Catching Mr. Shake is public by design — they are handed the phone to
+  // guess in front of everybody — so step past it to reach the screen the
+  // rest of the table sees.
+  if ((await phase()) === "shakeGuess") {
+    await evalJs(`(() => {
+      const i = document.querySelector('.guess-input');
+      const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
+      set.call(i, 'not the word'); i.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`);
+    await sleep(200); await click("lock it in"); await sleep(STEP);
+  }
+
+  if ((await phase()) === "elimination") {
+    const screen = await text();
+    ok("neither word is printed on the elimination screen",
+       !screen.includes(pair[0].toLowerCase()) && !screen.includes(pair[1].toLowerCase()),
+       pair.join(" / "));
+    ok("and it never says which side they were on",
+       !screen.includes("was a civilian") && !screen.includes("was an undercover"), screen.slice(0, 90));
+    ok("the live impostor count is gone — it leaked the same fact",
+       !/impostors? still among them/.test(screen));
+    ok("what it shows instead is the composition dealt at the start",
+       screen.includes("dealt at the start"), screen.slice(0, 120));
+  } else {
+    ok("the game ended on this vote, so nothing was withheld", true, await phase());
+  }
+}
+
 head("Secret ballot");
 await go();
 {

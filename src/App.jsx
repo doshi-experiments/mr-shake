@@ -4,7 +4,7 @@ import {
   MIN_PLAYERS, MAX_PLAYERS, MIN_PLAYERS_FOR_MRSHAKE,
   initialState, reduce, validateSetup, living, counts, revealFor,
 } from "./game.js";
-import { packFor } from "./words.js";
+import { packFor, normalizePack, PACKS, PACK_IDS } from "./words.js";
 
 /* ------------------------------------------------------------------ *
  *  Theme — the same cookie the portfolio and the experiments index
@@ -45,6 +45,16 @@ function applyTheme(t) {
 const SAVE_KEY = "mr-shake:game";
 const SETUP_KEY = "mr-shake:setup";
 
+/* Anything stored by the build that had two packs carries `spicy: true`
+ * and no `pack` at all. Left alone that reads as undefined and the chips
+ * all come up unpressed, so the choice is translated on the way in and
+ * the old key dropped. */
+function migrateSetup(setup) {
+  const out = { ...setup, pack: normalizePack(setup.pack ?? setup.spicy) };
+  delete out.spicy;
+  return out;
+}
+
 /* A game in progress survives a reload, a phone locking, or somebody
  * hitting back. Without this, one accidental swipe ends the evening.
  * sessionStorage rather than localStorage: per tab, and gone when the
@@ -56,8 +66,11 @@ function useGame() {
     // is a hand of cards and belongs to it. Two stores, two lifetimes.
     try {
       const savedSetup = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
+      // Migrate BEFORE merging. Merged over the defaults first, `pack` is
+      // always present and always "clean", so the old `spicy` never gets
+      // a chance to speak and every upgrader silently loses their choice.
       if (savedSetup && Array.isArray(savedSetup.names))
-        base.setup = { ...base.setup, ...savedSetup };
+        base.setup = { ...base.setup, ...migrateSetup(savedSetup) };
     } catch (e) {}
     try {
       const saved = sessionStorage.getItem(SAVE_KEY);
@@ -65,7 +78,7 @@ function useGame() {
         const parsed = JSON.parse(saved);
         // Guard against a shape from an older build.
         if (parsed && typeof parsed.phase === "string" && parsed.setup) {
-          return { ...base, ...parsed };
+          return { ...base, ...parsed, setup: migrateSetup(parsed.setup) };
         }
       }
     } catch (e) {}
@@ -216,8 +229,9 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
 function Setup({ state, dispatch }) {
   const s = state.setup;
   const errors = validateSetup(s);
-  // Chips come from whichever pack is selected; the two have disjoint ids.
-  const categories = packFor(s.spicy).categories;
+  // Chips come from whichever pack is selected; the three have disjoint ids.
+  const pack = normalizePack(s.pack);
+  const categories = packFor(pack).categories;
   const impostors = s.undercovers + s.mrShakes;
   const maxImpostors = Math.max(0, Math.ceil(s.players / 2) - 1);
 
@@ -310,20 +324,16 @@ function Setup({ state, dispatch }) {
       <div className="stack--tight stack">
         <span className="label">Words</span>
         <div className="segmented">
-          <button type="button" className="chip" aria-pressed={!s.spicy}
-                  onClick={() => dispatch({ type: "setup/setPack", spicy: false })}>
-            Clean
-          </button>
-          <button type="button" className="chip chip--rude" aria-pressed={!!s.spicy}
-                  onClick={() => dispatch({ type: "setup/setPack", spicy: true })}>
-            Rude
-          </button>
+          {PACK_IDS.map((id) => (
+            <button key={id} type="button"
+                    className={"chip chip--pack-" + id}
+                    aria-pressed={pack === id}
+                    onClick={() => dispatch({ type: "setup/setPack", pack: id })}>
+              {PACKS[id].name}
+            </button>
+          ))}
         </div>
-        <p className="fine">
-          {s.spicy
-            ? "Dating, hangovers, bad habits and a lot of innuendo. Nothing you couldn't say at a work party, but read the room."
-            : "Everyday things — food, animals, places, films. Fine for any table."}
-        </p>
+        <p className="fine">{PACKS[pack].blurb}</p>
       </div>
 
       <div className="stack--tight stack">
@@ -495,10 +505,99 @@ function Reveal({ state, dispatch }) {
  *  Describe
  * ------------------------------------------------------------------ */
 
+/* Inline rather than the 👁 emoji, which renders as a full-colour eyeball
+   on some phones and a hollow outline on others, at sizes nobody agrees
+   on. This one inherits the text colour and the row's font size. */
+function EyeIcon() {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M1.8 12S5.5 5.5 12 5.5 22.2 12 22.2 12 18.5 18.5 12 18.5 1.8 12 1.8 12Z"
+            fill="none" stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+/* Somebody forgets their word four rounds in. Re-dealing is not an option
+ * and having a neighbour whisper it is worse, so the phone goes back to
+ * them exactly the way it went the first time: hand-over gate, face-down
+ * card, then the word. Same three stages and the same lockout as the
+ * opening reveal, because the risk is identical — whoever is holding the
+ * phone right now is not necessarily the person whose word is about to be
+ * on screen. Reached from the describe list, so it is available in the
+ * one phase where the table is talking and the phone is going around. */
+function PeekWord({ player, onDone }) {
+  const [stage, setStage] = useState("pass");
+  const locked = useLockout([stage]);
+  const card = revealFor(player);
+
+  if (stage === "pass") {
+    return (
+      <div className="stage center stack--loose">
+        <div className="stack--tight stack">
+          <p className="eyebrow">Reminder</p>
+          <p className="lede">Pass the phone back to</p>
+          <p className="who">{player.name}</p>
+        </div>
+        <button type="button" className="btn btn--ghost btn--small"
+                onClick={onDone}>
+          Never mind
+        </button>
+        <button type="button" className="btn btn--primary btn--tall" disabled={locked}
+                onClick={() => setStage("hidden")}>
+          I'm {player.name}
+        </button>
+        <p className="fine">Nobody else should be looking.</p>
+      </div>
+    );
+  }
+
+  if (stage === "hidden") {
+    return (
+      <div className="stage center stack--loose">
+        <p className="eyebrow">{player.name}</p>
+        <button type="button" className="word-card word-card--face-down" disabled={locked}
+                onClick={() => setStage("shown")}>
+          <span className="lede">Tap to see your word again</span>
+          <span className="fine">Keep it to yourself</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="stage center stack--loose">
+      <p className="eyebrow">{player.name}</p>
+      {card.kind === MRSHAKE ? (
+        <div className="word-card word-card--shake">
+          <span className="word">You're Mr. Shake</span>
+          <span className="fine">Still no word. Keep bluffing.</span>
+        </div>
+      ) : (
+        <div className="word-card word-card--word">
+          <span className="eyebrow">Your word</span>
+          <span className="word">{card.word}</span>
+        </div>
+      )}
+      <button type="button" className="btn" disabled={locked} onClick={onDone}>
+        Hide and carry on
+      </button>
+    </div>
+  );
+}
+
 function Describe({ state, dispatch }) {
   const byId = useMemo(
     () => Object.fromEntries(state.players.map((p) => [p.id, p])), [state.players]);
-  const c = counts(state.players);
+  const [peekId, setPeekId] = useState(null);
+
+  // A peek belongs to the round it was opened in. Left standing it would
+  // put somebody else's word on screen the moment the next round began.
+  useEffect(() => { setPeekId(null); }, [state.round]);
+
+  const peeking = peekId === null ? null : state.players.find((p) => p.id === peekId);
+  if (peeking) return <PeekWord player={peeking} onDone={() => setPeekId(null)} />;
 
   return (
     <div className="stage stage--scroll stack--loose">
@@ -507,7 +606,8 @@ function Describe({ state, dispatch }) {
         <h2 className="subtitle">Describe your word, one at a time</h2>
         <p className="lede">
           One word or a short phrase each — never the word itself. Tap a name
-          once they have gone, so you can pick up where you left off.
+          once they have gone, so you can pick up where you left off. The eye
+          hands the phone back to someone who has forgotten theirs.
         </p>
       </div>
 
@@ -515,21 +615,24 @@ function Describe({ state, dispatch }) {
         {state.order.map((id, i) => {
           const done = state.spoken.includes(id);
           return (
-            <li key={id}>
+            <li key={id} className="order-row">
               <button type="button" className="order-item" aria-pressed={done}
                       onClick={() => dispatch({ type: "describe/toggleSpoken", id })}>
                 <span className="order-item__n">{i + 1}</span>
                 <span className="order-item__name">{byId[id].name}</span>
                 <span className="order-item__tick">{done ? "✓" : ""}</span>
               </button>
+              <button type="button" className="order-peek"
+                      aria-label={"Show " + byId[id].name + " their word again"}
+                      onClick={() => setPeekId(id)}>
+                <EyeIcon />
+              </button>
             </li>
           );
         })}
       </ol>
 
-      <p className="fine center">
-        {c.alive} still in · {c.impostors} {c.impostors === 1 ? "impostor" : "impostors"} among them
-      </p>
+      <Standing state={state} />
 
       <button type="button" className="btn btn--primary btn--tall"
               onClick={() => dispatch({ type: "describe/done" })}>
@@ -683,10 +786,39 @@ function ShakeGuess({ state, dispatch }) {
  *  What just happened
  * ------------------------------------------------------------------ */
 
+/* What the room is allowed to know between rounds.
+ *
+ * NOT the number of impostors still alive. That is the elimination
+ * reveal arriving by another route: watch it drop from two to one and
+ * you have been told exactly what hiding the card was meant to withhold.
+ * The dealt composition is genuinely public — it was chosen on the setup
+ * screen in front of everybody — and it never moves, so it gives the
+ * table something true to reason from without handing them the answer. */
+function Standing({ state }) {
+  const c = counts(state.players);
+  const { undercovers, mrShakes } = state.setup;
+  const dealt = [
+    undercovers + (undercovers === 1 ? " undercover" : " undercovers"),
+    mrShakes ? mrShakes === 1 ? "1 Mr. Shake" : mrShakes + " Mr. Shakes" : null,
+  ].filter(Boolean).join(" and ");
+
+  return (
+    <p className="fine center">
+      {c.alive} still in · {dealt} dealt at the start
+    </p>
+  );
+}
+
 function Elimination({ state, dispatch }) {
   const victim = state.players.find((p) => p.id === state.lastEliminated);
-  const c = counts(state.players);
   const shake = state.shakeGuess;
+  /* Mr. Shake being caught is already public — the whole table watched
+   * them be handed the phone to name the word — so there is nothing left
+   * to protect in that one case. Everybody else keeps their card until
+   * the game is actually over. Announcing "was a civilian, their word was
+   * Butter" mid-game hands the remaining impostors the word and tells an
+   * undercover which side they are on, which is the entire game. */
+  const shakeCaught = victim && victim.role === MRSHAKE;
 
   return (
     <div className="stage center stack--loose">
@@ -694,19 +826,25 @@ function Elimination({ state, dispatch }) {
         <div className="stack--tight stack">
           <p className="eyebrow">Round {state.round}</p>
           <p className="who">{victim.name}</p>
-          <h2 className="subtitle" style={{ color: roleColor(victim.role) }}>
-            was {victim.role === MRSHAKE ? "Mr. Shake"
-                 : victim.role === UNDERCOVER ? "an undercover" : "a civilian"}
-          </h2>
-          {victim.word && (
-            <p className="lede">
-              Their word was <strong style={{ color: "var(--ink)" }}>{victim.word}</strong>.
-            </p>
-          )}
-          {shake && victim.role === MRSHAKE && (
-            <p className="lede">
-              They guessed “{shake.guess}” — {shake.correct ? "right" : "wrong"}.
-            </p>
+          {shakeCaught ? (
+            <>
+              <h2 className="subtitle" style={{ color: roleColor(MRSHAKE) }}>
+                was Mr. Shake
+              </h2>
+              {shake && (
+                <p className="lede">
+                  They guessed “{shake.guess}” — {shake.correct ? "right" : "wrong"}.
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <h2 className="subtitle">is out</h2>
+              <p className="lede">
+                What they were stays secret until the game ends. Keep your own
+                word to yourself — this is not over.
+              </p>
+            </>
           )}
         </div>
       ) : (
@@ -717,9 +855,7 @@ function Elimination({ state, dispatch }) {
         </div>
       )}
 
-      <p className="fine">
-        {c.alive} left · {c.impostors} {c.impostors === 1 ? "impostor" : "impostors"} still among them
-      </p>
+      <Standing state={state} />
 
       <button type="button" className="btn btn--primary btn--tall"
               onClick={() => dispatch({ type: "round/next" })}>

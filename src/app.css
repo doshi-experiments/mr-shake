@@ -422,6 +422,30 @@ h2.subtitle {
 .order-item__tick { color: var(--civilian); font-size: 1rem; }
 .order-item:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
 
+/* The row is two separate controls: the name toggles "has spoken", the
+   eye hands the phone back. They cannot be nested — a button inside a
+   button is invalid and only one of them would ever fire — so the li is
+   the flex row and each control keeps its own hit area. */
+.order-row { display: flex; align-items: stretch; gap: 0.5rem; }
+.order-row .order-item { flex: 1 1 auto; min-width: 0; }
+.order-peek {
+  flex: 0 0 auto;
+  width: 52px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--mute);
+  cursor: pointer;
+  font-family: inherit;
+}
+.order-peek:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.order-peek:active { background: var(--card-alt); }
+.order-peek .icon { width: 22px; height: 22px; display: block; }
+
 /* ---------------- results ---------------- */
 
 .verdict { text-align: center; display: grid; gap: 0.5rem; }
@@ -550,11 +574,17 @@ h2.subtitle {
   min-height: 0;
 }
 
-/* The rude pack gets its own colour on the chip, so nobody flips it by
-   accident and nobody is unsure which mode they are in. */
-.chip--rude[aria-pressed="true"] {
+/* Each pack gets its own colour when selected, so nobody flips one by
+   accident and nobody is unsure which mode they are in. Explicit is the
+   loudest of the three on purpose — it is the one you want to notice is
+   still on from last time before the phone goes round. */
+.chip--pack-rude[aria-pressed="true"] {
   background: var(--undercover);
   border-color: var(--undercover);
+}
+.chip--pack-explicit[aria-pressed="true"] {
+  background: var(--shake);
+  border-color: var(--shake);
 }
 
 /* Renaming from the hand-over screen. Deliberately not the same size or

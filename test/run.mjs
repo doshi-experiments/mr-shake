@@ -13,7 +13,9 @@ import {
 } from "../src/game.js";
 import {
   PAIRS, CATEGORIES, CATEGORY_IDS,
-  DIRTY_PAIRS, DIRTY_CATEGORIES, DIRTY_CATEGORY_IDS, packFor,
+  DIRTY_PAIRS, DIRTY_CATEGORIES, DIRTY_CATEGORY_IDS,
+  EXPLICIT_PAIRS, EXPLICIT_CATEGORIES,
+  PACKS, PACK_IDS, packFor, normalizePack,
 } from "../src/words.js";
 
 let pass = 0, fail = 0;
@@ -33,10 +35,10 @@ const setupOf = (players, undercovers, mrShakes) => ({
 
 /* ------------------------------------------------------------------ */
 head("The word packs");
-for (const [label, pairs, cats, ids] of [
-  ["clean", PAIRS, CATEGORIES, CATEGORY_IDS],
-  ["rude", DIRTY_PAIRS, DIRTY_CATEGORIES, DIRTY_CATEGORY_IDS],
-]) {
+for (const label of PACK_IDS) {
+  const pairs = PACKS[label].pairs;
+  const cats = PACKS[label].categories;
+  const ids = cats.map((c) => c.id);
   ok(label + ": every pair has two words and a known category",
      pairs.every((p) => p.length === 3 && p[0] && p[1] && ids.includes(p[2])),
      pairs.length + " pairs");
@@ -57,11 +59,37 @@ for (const [label, pairs, cats, ids] of [
       norm.set(k, w);
     }
   ok(label + ": no two words normalise to the same guess", collision === null, collision || "");
+  // Single words only, everywhere. A phrase is hard to describe without
+  // saying half of it, and Mr. Shake has to type the civilian word back.
+  const phrases = pairs.flatMap((p) => [p[0], p[1]]).filter((w) => !/^\p{L}+$/u.test(w));
+  ok(label + ": every word is a single word", phrases.length === 0, phrases.join(", "));
 }
-ok("the packs share no category id — a stale selection cannot cross over",
-   !CATEGORY_IDS.some((c) => DIRTY_CATEGORY_IDS.includes(c)));
-ok("packFor returns the right pack either way",
-   packFor(false).pairs === PAIRS && packFor(true).pairs === DIRTY_PAIRS);
+{
+  // Every pair of packs, not just the first two — a third pack sharing an
+  // id with the second would have slipped past a hand-written check.
+  let shared = null;
+  for (let i = 0; i < PACK_IDS.length; i++)
+    for (let j = i + 1; j < PACK_IDS.length; j++) {
+      const b = new Set(PACKS[PACK_IDS[j]].categories.map((c) => c.id));
+      const hit = PACKS[PACK_IDS[i]].categories.map((c) => c.id).find((c) => b.has(c));
+      if (hit) shared = PACK_IDS[i] + "/" + PACK_IDS[j] + ": " + hit;
+    }
+  ok("no two packs share a category id — a stale selection cannot cross over",
+     shared === null, shared || "");
+}
+ok("packFor returns the right pack for each id",
+   packFor("clean").pairs === PAIRS &&
+   packFor("rude").pairs === DIRTY_PAIRS &&
+   packFor("explicit").pairs === EXPLICIT_PAIRS);
+ok("the explicit pack is wired up and populated",
+   EXPLICIT_PAIRS.length > 0 && EXPLICIT_CATEGORIES.length > 0,
+   EXPLICIT_PAIRS.length + " pairs across " + EXPLICIT_CATEGORIES.length + " categories");
+// A phone that last ran the two-pack build has `spicy: true` in storage.
+ok("a setup saved as spicy:true still lands on the rude pack",
+   normalizePack(true) === "rude" && packFor(true).pairs === DIRTY_PAIRS);
+ok("spicy:false, a missing value and nonsense all fall back to clean",
+   normalizePack(false) === "clean" && normalizePack(undefined) === "clean" &&
+   normalizePack("banana") === "clean");
 
 /* ------------------------------------------------------------------ */
 head("Composition and validation");
@@ -252,44 +280,95 @@ ok("an empty guess is not a win", !guessIsCorrect("", "Coffee"));
 ok("whitespace alone is not a win", !guessIsCorrect("   ", "Coffee"));
 
 /* ------------------------------------------------------------------ */
-head("The rude pack is a swap, not a mix");
+head("A pack is a swap, not a mix");
 {
   const rng = mulberry32(4242);
-  const dirtyIds = new Set(DIRTY_PAIRS.map((p) => p[0] + "|" + p[1]));
-  const cleanIds = new Set(PAIRS.map((p) => p[0] + "|" + p[1]));
-  let leakIn = 0, leakOut = 0;
-  for (let i = 0; i < 400; i++) {
-    if (!dirtyIds.has(pickPair(rng, { spicy: true }).id)) leakIn++;
-    if (!cleanIds.has(pickPair(rng, { spicy: false }).id)) leakOut++;
+  const idsOfPack = (id) => new Set(PACKS[id].pairs.map((p) => p[0] + "|" + p[1]));
+
+  for (const id of PACK_IDS) {
+    const own = idsOfPack(id);
+    let leaked = 0;
+    for (let i = 0; i < 400; i++) if (!own.has(pickPair(rng, { pack: id }).id)) leaked++;
+    ok("400 " + id + " draws are all from the " + id + " pack", leaked === 0, leaked + " leaked");
   }
-  ok("400 spicy draws are all from the rude pack", leakIn === 0, leakIn + " leaked");
-  ok("400 clean draws are all from the clean pack", leakOut === 0, leakOut + " leaked");
 
   let offCategory = 0;
   for (let i = 0; i < 200; i++) {
-    const p = pickPair(rng, { spicy: true, categories: ["d-dating", "d-body"] });
+    const p = pickPair(rng, { pack: "rude", categories: ["d-dating", "d-body"] });
     if (p.category !== "d-dating" && p.category !== "d-body") offCategory++;
   }
   ok("category chips filter inside the rude pack", offCategory === 0, offCategory + " off-category");
 
-  // A selection carried over from the other pack would match nothing. The
+  offCategory = 0;
+  for (let i = 0; i < 200; i++) {
+    const p = pickPair(rng, { pack: "explicit", categories: ["x-toys"] });
+    if (p.category !== "x-toys") offCategory++;
+  }
+  ok("and inside the explicit pack", offCategory === 0, offCategory + " off-category");
+
+  // A selection carried over from another pack would match nothing. The
   // pool falls back rather than throwing, but the selection must be cleared.
   let st = initialState();
+  ok("a fresh setup starts on the clean pack", st.setup.pack === "clean");
   st = reduce(st, { type: "setup/toggleCategory", id: "animals" }, rng);
   st = reduce(st, { type: "setup/toggleCategory", id: "tech" }, rng);
   ok("clean categories can be picked", st.setup.categories.length === 2);
-  st = reduce(st, { type: "setup/setPack", spicy: true }, rng);
+  st = reduce(st, { type: "setup/setPack", pack: "rude" }, rng);
   ok("switching packs clears the selection", st.setup.categories.length === 0);
-  ok("and sets the flag", st.setup.spicy === true);
+  ok("and records the pack", st.setup.pack === "rude");
 
   st = reduce(st, { type: "setup/patch", patch: { players: 6 } }, rng);
   st = reduce(st, { type: "game/start" }, rng);
-  ok("a spicy game deals a rude pair", dirtyIds.has(st.pair.id), st.pair.civilian + " / " + st.pair.undercover);
+  ok("a rude game deals a rude pair", idsOfPack("rude").has(st.pair.id),
+     st.pair.civilian + " / " + st.pair.undercover);
   ok("and every civilian holds the rude civilian word",
      st.players.filter((p) => p.role === CIVILIAN).every((p) => p.word === st.pair.civilian));
 
-  st = reduce(st, { type: "setup/setPack", spicy: false }, rng);
-  ok("switching back clears again", st.setup.categories.length === 0 && st.setup.spicy === false);
+  st = reduce(st, { type: "setup/setPack", pack: "explicit" }, rng);
+  st = reduce(st, { type: "game/start" }, rng);
+  ok("an explicit game deals an explicit pair", idsOfPack("explicit").has(st.pair.id),
+     st.pair.civilian + " / " + st.pair.undercover);
+
+  st = reduce(st, { type: "setup/setPack", pack: "clean" }, rng);
+  ok("switching back clears again",
+     st.setup.categories.length === 0 && st.setup.pack === "clean");
+  st = reduce(st, { type: "setup/setPack", pack: "nonsense" }, rng);
+  ok("an unknown pack id falls back to clean rather than emptying the pool",
+     st.setup.pack === "clean");
+}
+
+/* ------------------------------------------------------------------ */
+head("Mr. Shake does not land on the same player twice running");
+{
+  const rng = mulberry32(31337);
+  let st = initialState();
+  st = reduce(st, { type: "setup/patch", patch: { players: 6 } }, rng);
+  st = reduce(st, { type: "game/start" }, rng);
+
+  const shakesOf = (s) => s.players.filter((p) => p.role === MRSHAKE).map((p) => p.id);
+  ok("the six-player default deals one Mr. Shake", shakesOf(st).length === 1);
+
+  let repeats = 0;
+  let distinctHolders = new Set(shakesOf(st));
+  for (let g = 0; g < 200; g++) {
+    const before = shakesOf(st);
+    st = reduce(st, { type: "game/again" }, rng);
+    const after = shakesOf(st);
+    if (after.some((id) => before.includes(id))) repeats++;
+    after.forEach((id) => distinctHolders.add(id));
+  }
+  ok("200 consecutive deals, nobody ever holds it twice running", repeats === 0,
+     repeats + " repeats");
+  ok("and it still moves around the whole table", distinctHolders.size === 6,
+     distinctHolders.size + " of 6 seats held it");
+
+  // The constraint is a preference, not a promise it can always keep: with
+  // nowhere legal to put the role the deal still has to happen.
+  const tight = { names: ["a", "b", "c", "d"], undercovers: 1, mrShakes: 1 };
+  const pair = pickPair(rng, {});
+  const forced = dealRoles(tight, pair, rng, { avoidMrShake: [0, 1, 2, 3] });
+  ok("an impossible constraint still deals a complete game",
+     forced.length === 4 && forced.filter((p) => p.role === MRSHAKE).length === 1);
 }
 
 head("Renaming whoever is holding the phone");

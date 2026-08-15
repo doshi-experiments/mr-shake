@@ -32,15 +32,15 @@ export const PAIRS = [
   ["Coffee", "Tea", "food"],
   ["Pizza", "Burger", "food"],
   ["Pancake", "Waffle", "food"],
-  ["Ice cream", "Frozen yoghurt", "food"],
+  ["Gelato", "Sorbet", "food"],
   ["Sushi", "Sashimi", "food"],
   ["Taco", "Burrito", "food"],
-  ["Ketchup", "Barbecue sauce", "food"],
+  ["Ketchup", "Relish", "food"],
   ["Butter", "Margarine", "food"],
   ["Beer", "Wine", "food"],
   ["Popcorn", "Crisps", "food"],
   ["Cake", "Pie", "food"],
-  ["Honey", "Maple syrup", "food"],
+  ["Honey", "Syrup", "food"],
   ["Lemon", "Lime", "food"],
   ["Cucumber", "Zucchini", "food"],
   ["Doughnut", "Bagel", "food"],
@@ -51,10 +51,10 @@ export const PAIRS = [
   ["Whisky", "Rum", "food"],
   ["Champagne", "Prosecco", "food"],
   ["Sandwich", "Wrap", "food"],
-  ["Fries", "Hash browns", "food"],
+  ["Fries", "Wedges", "food"],
   ["Pasta", "Noodles", "food"],
   ["Mustard", "Mayonnaise", "food"],
-  ["Steak", "Roast chicken", "food"],
+  ["Bacon", "Ham", "food"],
 
   // ---- Animals ----
   ["Cat", "Dog", "animals"],
@@ -71,7 +71,7 @@ export const PAIRS = [
   ["Owl", "Eagle", "animals"],
   ["Penguin", "Seal", "animals"],
   ["Camel", "Llama", "animals"],
-  ["Hamster", "Guinea pig", "animals"],
+  ["Hamster", "Gerbil", "animals"],
   ["Goat", "Sheep", "animals"],
   ["Mouse", "Rat", "animals"],
   ["Octopus", "Squid", "animals"],
@@ -81,8 +81,8 @@ export const PAIRS = [
   ["Beach", "Desert", "places"],
   ["Library", "Bookshop", "places"],
   ["Hotel", "Motel", "places"],
-  ["Museum", "Art gallery", "places"],
-  ["Airport", "Train station", "places"],
+  ["Museum", "Gallery", "places"],
+  ["Airport", "Station", "places"],
   ["Gym", "Playground", "places"],
   ["Church", "Temple", "places"],
   ["Forest", "Jungle", "places"],
@@ -90,7 +90,7 @@ export const PAIRS = [
   ["Bar", "Pub", "places"],
   ["Hospital", "Clinic", "places"],
   ["Cinema", "Theatre", "places"],
-  ["Supermarket", "Farmers market", "places"],
+  ["Supermarket", "Market", "places"],
   ["Zoo", "Aquarium", "places"],
   ["Castle", "Palace", "places"],
   ["Cafe", "Restaurant", "places"],
@@ -105,14 +105,14 @@ export const PAIRS = [
   ["Mirror", "Window", "objects"],
   ["Candle", "Lamp", "objects"],
   ["Clock", "Watch", "objects"],
-  ["Fan", "Air conditioner", "objects"],
+  ["Fan", "Heater", "objects"],
   ["Soap", "Shampoo", "objects"],
   ["Wallet", "Purse", "objects"],
   ["Key", "Lock", "objects"],
   ["Blanket", "Towel", "objects"],
   ["Fork", "Spoon", "objects"],
   ["Scissors", "Knife", "objects"],
-  ["Broom", "Vacuum cleaner", "objects"],
+  ["Broom", "Mop", "objects"],
   ["Ladder", "Staircase", "objects"],
   ["Hat", "Helmet", "objects"],
   ["Glasses", "Sunglasses", "objects"],
@@ -135,37 +135,37 @@ export const PAIRS = [
   ["Hiking", "Walking", "doing"],
   ["Football", "Rugby", "doing"],
   ["Tennis", "Badminton", "doing"],
-  ["Golf", "Mini golf", "doing"],
-  ["Juggling", "Magic trick", "doing"],
-  ["Jigsaw puzzle", "Crossword", "doing"],
+  ["Golf", "Croquet", "doing"],
+  ["Juggling", "Acrobatics", "doing"],
+  ["Crossword", "Sudoku", "doing"],
 
   // ---- Books, film & music ----
-  ["Streaming", "Cinema trip", "culture"],
+  ["Trailer", "Teaser", "culture"],
   ["Podcast", "Radio", "culture"],
-  ["Novel", "Comic book", "culture"],
+  ["Novel", "Memoir", "culture"],
   ["Guitar", "Violin", "culture"],
   ["Piano", "Keyboard", "culture"],
   ["Magician", "Clown", "culture"],
   ["Opera", "Musical", "culture"],
-  ["Documentary", "Reality show", "culture"],
-  ["Stand-up comedy", "Improv", "culture"],
-  ["Vinyl record", "Cassette tape", "culture"],
-  ["Board game", "Video game", "culture"],
+  ["Documentary", "Biopic", "culture"],
+  ["Comic", "Manga", "culture"],
+  ["Vinyl", "Cassette", "culture"],
+  ["Sequel", "Remake", "culture"],
   ["Circus", "Carnival", "culture"],
   ["Drums", "Bongos", "culture"],
-  ["Poetry", "Song lyrics", "culture"],
+  ["Poetry", "Lyrics", "culture"],
 
   // ---- Travel ----
   ["Taxi", "Bus", "travel"],
   ["Bicycle", "Motorcycle", "travel"],
-  ["Cruise ship", "Ferry", "travel"],
+  ["Cruise", "Ferry", "travel"],
   ["Helicopter", "Aeroplane", "travel"],
   ["Passport", "Visa", "travel"],
   ["Train", "Tram", "travel"],
-  ["Hostel", "Holiday rental", "travel"],
+  ["Hostel", "Guesthouse", "travel"],
   ["Map", "Compass", "travel"],
-  ["Souvenir", "Fridge magnet", "travel"],
-  ["Road trip", "Cruise", "travel"],
+  ["Souvenir", "Postcard", "travel"],
+  ["Yacht", "Sailboat", "travel"],
   ["Tent", "Caravan", "travel"],
   ["Subway", "Monorail", "travel"],
 
@@ -173,11 +173,11 @@ export const PAIRS = [
   ["Teacher", "Professor", "people"],
   ["Doctor", "Nurse", "people"],
   ["Chef", "Baker", "people"],
-  ["Police officer", "Security guard", "people"],
+  ["Sheriff", "Bouncer", "people"],
   ["Barber", "Hairdresser", "people"],
   ["Actor", "Model", "people"],
   ["Firefighter", "Paramedic", "people"],
-  ["Pilot", "Flight attendant", "people"],
+  ["Pilot", "Navigator", "people"],
   ["Lawyer", "Judge", "people"],
   ["Farmer", "Gardener", "people"],
   ["Journalist", "Blogger", "people"],
@@ -188,10 +188,10 @@ export const PAIRS = [
 
   // ---- Tech ----
   ["Laptop", "Tablet", "tech"],
-  ["Email", "Text message", "tech"],
-  ["Video call", "Phone call", "tech"],
+  ["Email", "Fax", "tech"],
+  ["Modem", "Router", "tech"],
   ["Password", "Fingerprint", "tech"],
-  ["Wi-Fi", "Bluetooth", "tech"],
+  ["Wifi", "Bluetooth", "tech"],
   ["Robot", "Android", "tech"],
   ["Printer", "Photocopier", "tech"],
   ["Headphones", "Speakers", "tech"],
@@ -199,8 +199,8 @@ export const PAIRS = [
   ["Calculator", "Abacus", "tech"],
   ["Drone", "Satellite", "tech"],
   ["Emoji", "Sticker", "tech"],
-  ["Smartwatch", "Fitness tracker", "tech"],
-  ["USB stick", "Hard drive", "tech"],
+  ["Smartwatch", "Pedometer", "tech"],
+  ["Cable", "Charger", "tech"],
 
   // ---- Everyday life ----
   ["Wedding", "Engagement", "life"],
@@ -213,10 +213,10 @@ export const PAIRS = [
   ["Tattoo", "Piercing", "life"],
   ["Selfie", "Portrait", "life"],
   ["Gossip", "Secret", "life"],
-  ["Alarm clock", "Snooze button", "life"],
+  ["Alarm", "Snooze", "life"],
   ["Homework", "Exam", "life"],
-  ["Job interview", "Audition", "life"],
-  ["Queue", "Traffic jam", "life"],
+  ["Interview", "Audition", "life"],
+  ["Queue", "Traffic", "life"],
   ["Handshake", "Hug", "life"],
   ["Diary", "Blog", "life"],
   ["Rent", "Mortgage", "life"],
@@ -229,12 +229,9 @@ export const PAIRS = [
  *  The rude pack
  *
  *  Cheeky rather than explicit, and that is a design decision before it
- *  is a taste one. The mechanic needs a word you can gesture at
- *  sideways for one clue; graphic anatomy collapses a round into
- *  laughing instead of deducing, and the two halves of an explicit pair
- *  usually read as the same thing, which kills the signal the whole
- *  game runs on. Dating, hangovers and bad habits give clues somewhere
- *  to go.
+ *  is a taste one. Innuendo gives a clue somewhere to go: you can gesture
+ *  sideways at "Hangover" for a whole turn. The explicit pack below is
+ *  the one for tables that want the other thing.
  *
  *  Category ids are prefixed `d-` so a stale selection left over from
  *  the clean pack can never silently match one of these.
@@ -250,148 +247,271 @@ export const DIRTY_CATEGORIES = [
 
 export const DIRTY_PAIRS = [
   // ---- Dating ----
-  ["One-night stand", "First date", "d-dating"],
   ["Ghosting", "Breadcrumbing", "d-dating"],
-  ["Situationship", "Friends with benefits", "d-dating"],
-  ["Dating app", "Speed dating", "d-dating"],
-  ["Booty call", "Drunk text", "d-dating"],
-  ["Wingman", "Third wheel", "d-dating"],
-  ["Netflix and chill", "Movie night", "d-dating"],
   ["Sexting", "Flirting", "d-dating"],
   ["Hickey", "Bruise", "d-dating"],
-  ["Blind date", "Set-up", "d-dating"],
-  ["Cuffing season", "Summer fling", "d-dating"],
   ["Rebound", "Crush", "d-dating"],
-  ["Lap dance", "Slow dance", "d-dating"],
-  ["Making out", "Holding hands", "d-dating"],
-  ["Dirty talk", "Sweet nothings", "d-dating"],
-  ["Red flag", "Green flag", "d-dating"],
-  ["Break-up text", "Break-up call", "d-dating"],
-  ["Ex", "In-law", "d-dating"],
-  ["Proposal", "Ultimatum", "d-dating"],
   ["Lingerie", "Pyjamas", "d-dating"],
+  ["Proposal", "Ultimatum", "d-dating"],
+  ["Situationship", "Romance", "d-dating"],
+  ["Chemistry", "Attraction", "d-dating"],
+  ["Kissing", "Cuddling", "d-dating"],
+  ["Breakup", "Divorce", "d-dating"],
+  ["Honeymoon", "Anniversary", "d-dating"],
+  ["Seduction", "Persuasion", "d-dating"],
+  ["Jealousy", "Envy", "d-dating"],
 
   // ---- Big night out ----
-  ["Hangover", "Still drunk", "d-night"],
-  ["Beer goggles", "Rose-tinted glasses", "d-night"],
-  ["Tequila shot", "Vodka shot", "d-night"],
-  ["Body shot", "Shotgunning a beer", "d-night"],
-  ["Hen party", "Stag do", "d-night"],
-  ["Strip club", "Burlesque", "d-night"],
-  ["Bar crawl", "Wine tasting", "d-night"],
-  ["Kebab at 3am", "Brunch", "d-night"],
-  ["Blacking out", "Passing out", "d-night"],
-  ["Drunk dial", "Butt dial", "d-night"],
-  ["Dance floor", "Mosh pit", "d-night"],
-  ["Nightclub", "House party", "d-night"],
+  ["Hangover", "Migraine", "d-night"],
+  ["Tequila", "Vodka", "d-night"],
+  ["Cocktail", "Mocktail", "d-night"],
+  ["Nightclub", "Disco", "d-night"],
   ["Bouncer", "Bartender", "d-night"],
-  ["Last call", "Lock-in", "d-night"],
-  ["Hair of the dog", "Greasy fry-up", "d-night"],
-  ["Pre-drinks", "Afters", "d-night"],
-  ["Designated driver", "Taxi home", "d-night"],
-  ["Bar tab", "Round of drinks", "d-night"],
-  ["Throwing up", "The spins", "d-night"],
-  ["Karaoke at midnight", "Open mic", "d-night"],
+  ["Rave", "Festival", "d-night"],
+  ["Blackout", "Fainting", "d-night"],
+  ["Kebab", "Pizza", "d-night"],
+  ["Karaoke", "Dancing", "d-night"],
+  ["Shots", "Pints", "d-night"],
+  ["Afterparty", "Sleepover", "d-night"],
+  ["Regret", "Shame", "d-night"],
+  ["Vomiting", "Burping", "d-night"],
 
   // ---- Body ----
+  ["Cleavage", "Shoulder", "d-body"],
   ["Thong", "Boxers", "d-body"],
-  ["Push-up bra", "Corset", "d-body"],
-  ["Skinny dipping", "Nude beach", "d-body"],
-  ["Nudes", "Selfie", "d-body"],
-  ["Bikini wax", "Shaving", "d-body"],
-  ["Six-pack", "Dad bod", "d-body"],
+  ["Sunburn", "Freckles", "d-body"],
+  ["Muscles", "Curves", "d-body"],
+  ["Sweat", "Perfume", "d-body"],
+  ["Nudity", "Modesty", "d-body"],
   ["Botox", "Filler", "d-body"],
-  ["Spray tan", "Sunburn", "d-body"],
-  ["Cleavage", "Low neckline", "d-body"],
-  ["Sweat patch", "Deodorant", "d-body"],
-  ["Bad breath", "Body odour", "d-body"],
-  ["Farting", "Burping", "d-body"],
-  ["Muffin top", "Love handles", "d-body"],
-  ["Bedhead", "Hat hair", "d-body"],
-  ["Chest hair", "Beard", "d-body"],
-  ["Tan lines", "Freckles", "d-body"],
-  ["Cold shower", "Ice bath", "d-body"],
-  ["Morning breath", "Garlic breath", "d-body"],
+  ["Waxing", "Shaving", "d-body"],
+  ["Bellybutton", "Dimple", "d-body"],
+  ["Cellulite", "Stretchmarks", "d-body"],
+  ["Snoring", "Drooling", "d-body"],
+  ["Farting", "Sneezing", "d-body"],
+  ["Bedhead", "Stubble", "d-body"],
 
   // ---- Bad habits ----
-  ["Vape", "Cigarette", "d-habits"],
-  ["Weed", "Tobacco", "d-habits"],
+  ["Vaping", "Smoking", "d-habits"],
   ["Gambling", "Lottery", "d-habits"],
-  ["Doomscrolling", "Binge-watching", "d-habits"],
-  ["Procrastinating", "Napping", "d-habits"],
-  ["Biting your nails", "Cracking your knuckles", "d-habits"],
+  ["Doomscrolling", "Bingewatching", "d-habits"],
+  ["Procrastinating", "Daydreaming", "d-habits"],
+  ["Fidgeting", "Twitching", "d-habits"],
   ["Snitching", "Gossiping", "d-habits"],
-  ["White lie", "Excuse", "d-habits"],
-  ["Calling in sick", "Working from home", "d-habits"],
-  ["Stalking an ex online", "Reading old texts", "d-habits"],
-  ["Impulse buy", "Spending spree", "d-habits"],
-  ["Energy drink", "Double espresso", "d-habits"],
-  ["Midnight snack", "Second dinner", "d-habits"],
-  ["Being late", "Cancelling last minute", "d-habits"],
-  ["Oversharing", "Humblebrag", "d-habits"],
-  ["Silent treatment", "Petty revenge", "d-habits"],
-  ["Eavesdropping", "Snooping", "d-habits"],
+  ["Lying", "Exaggerating", "d-habits"],
+  ["Stalking", "Snooping", "d-habits"],
+  ["Splurging", "Hoarding", "d-habits"],
+  ["Caffeine", "Nicotine", "d-habits"],
+  ["Snacking", "Bingeing", "d-habits"],
+  ["Oversharing", "Humblebragging", "d-habits"],
+  ["Sulking", "Pouting", "d-habits"],
 
   // ---- Grown-up life ----
-  ["Divorce", "Break-up", "d-life"],
-  ["Prenup", "Marriage licence", "d-life"],
-  ["Overdraft", "Payday loan", "d-life"],
-  ["Credit card debt", "Student loan", "d-life"],
-  ["Awkward silence", "Lift ride", "d-life"],
-  ["Office party", "Family dinner", "d-life"],
-  ["In-laws visiting", "Landlord inspection", "d-life"],
-  ["Therapy", "Venting to a friend", "d-life"],
-  ["Midlife crisis", "Gap year", "d-life"],
-  ["Fake ID", "Borrowed badge", "d-life"],
-  ["Speeding ticket", "Parking fine", "d-life"],
-  ["Group chat", "Private message", "d-life"],
-  ["Sugar daddy", "Rich uncle", "d-life"],
-  ["Hot tub", "Sauna", "d-life"],
-  ["Massage", "Chiropractor", "d-life"],
+  ["Alimony", "Inheritance", "d-life"],
+  ["Overdraft", "Debt", "d-life"],
+  ["Therapy", "Venting", "d-life"],
+  ["Retirement", "Redundancy", "d-life"],
+  ["Mortgage", "Rent", "d-life"],
+  ["Relatives", "Neighbours", "d-life"],
+  ["Speeding", "Parking", "d-life"],
+  ["Reunion", "Funeral", "d-life"],
+  ["Sauna", "Jacuzzi", "d-life"],
+  ["Massage", "Physio", "d-life"],
+  ["Bonus", "Raise", "d-life"],
+  ["Taxes", "Bills", "d-life"],
+  ["Insomnia", "Jetlag", "d-life"],
 ];
 
-/* Picking a pack is a one-liner everywhere it is needed, and there is
- * exactly one place that decides which array is in play. */
-export const packFor = (spicy) =>
-  spicy
-    ? { pairs: DIRTY_PAIRS, categories: DIRTY_CATEGORIES }
-    : { pairs: PAIRS, categories: CATEGORIES };
+/* ------------------------------------------------------------------ *
+ *  The explicit pack
+ *
+ *  Adults who have opted in twice — once by picking the pack, once by
+ *  agreeing to play it. Blunt where the rude pack is coy.
+ *
+ *  The band still has to hold, which is the part that is easy to lose
+ *  here. Two words for the same act give identical clues and the round
+ *  is a coin flip, so pairs are built the same way as everywhere else:
+ *  neighbours, not synonyms. `Bondage / Discipline` and `Whip / Paddle`
+ *  work; a pair of bare synonyms would not.
+ *
+ *  Category ids are prefixed `x-`, disjoint from both other packs.
+ * ------------------------------------------------------------------ */
+
+export const EXPLICIT_CATEGORIES = [
+  { id: "x-acts", name: "The act" },
+  { id: "x-body", name: "Anatomy" },
+  { id: "x-toys", name: "Toys & kit" },
+  { id: "x-kinks", name: "Kinks" },
+  { id: "x-scene", name: "The scene" },
+];
+
+export const EXPLICIT_PAIRS = [
+  // ---- The act ----
+  ["Orgasm", "Afterglow", "x-acts"],
+  ["Foreplay", "Aftercare", "x-acts"],
+  ["Quickie", "Marathon", "x-acts"],
+  ["Threesome", "Foursome", "x-acts"],
+  ["Hookup", "Fling", "x-acts"],
+  ["Striptease", "Lapdance", "x-acts"],
+  ["Moaning", "Panting", "x-acts"],
+  ["Missionary", "Cowgirl", "x-acts"],
+  ["Edging", "Teasing", "x-acts"],
+  ["Grinding", "Straddling", "x-acts"],
+  ["Roleplay", "Cosplay", "x-acts"],
+  ["Seduction", "Flirtation", "x-acts"],
+
+  // ---- Anatomy ----
+  ["Nipple", "Areola", "x-body"],
+  ["Cleavage", "Buttocks", "x-body"],
+  ["Genitals", "Groin", "x-body"],
+  ["Erection", "Arousal", "x-body"],
+  ["Thighs", "Hips", "x-body"],
+  ["Lips", "Tongue", "x-body"],
+  ["Pubes", "Stubble", "x-body"],
+  ["Sweat", "Saliva", "x-body"],
+  ["Curves", "Muscles", "x-body"],
+  ["Hickey", "Scratch", "x-body"],
+  ["Waistline", "Hipbone", "x-body"],
+  ["Nudity", "Lingerie", "x-body"],
+
+  // ---- Toys & kit ----
+  ["Vibrator", "Dildo", "x-toys"],
+  ["Handcuffs", "Rope", "x-toys"],
+  ["Blindfold", "Gag", "x-toys"],
+  ["Lubricant", "Moisturiser", "x-toys"],
+  ["Condom", "Diaphragm", "x-toys"],
+  ["Whip", "Paddle", "x-toys"],
+  ["Corset", "Harness", "x-toys"],
+  ["Feather", "Silk", "x-toys"],
+  ["Collar", "Leash", "x-toys"],
+  ["Costume", "Uniform", "x-toys"],
+  ["Mirror", "Camera", "x-toys"],
+  ["Chains", "Straps", "x-toys"],
+
+  // ---- Kinks ----
+  ["Bondage", "Discipline", "x-kinks"],
+  ["Dominance", "Submission", "x-kinks"],
+  ["Spanking", "Flogging", "x-kinks"],
+  ["Voyeurism", "Exhibitionism", "x-kinks"],
+  ["Fetish", "Obsession", "x-kinks"],
+  ["Praise", "Degradation", "x-kinks"],
+  ["Denial", "Indulgence", "x-kinks"],
+  ["Switching", "Topping", "x-kinks"],
+  ["Safeword", "Signal", "x-kinks"],
+  ["Consent", "Boundaries", "x-kinks"],
+  ["Restraint", "Freedom", "x-kinks"],
+  ["Latex", "Leather", "x-kinks"],
+
+  // ---- The scene ----
+  ["Brothel", "Nightclub", "x-scene"],
+  ["Stripper", "Escort", "x-scene"],
+  ["Pornography", "Erotica", "x-scene"],
+  ["Sexshop", "Boutique", "x-scene"],
+  ["Swingers", "Singles", "x-scene"],
+  ["Peepshow", "Cabaret", "x-scene"],
+  ["Burlesque", "Ballet", "x-scene"],
+  ["Magazine", "Calendar", "x-scene"],
+  ["Webcam", "Livestream", "x-scene"],
+  ["Subscription", "Membership", "x-scene"],
+  ["Spa", "Sauna", "x-scene"],
+  ["Chatroom", "Hotline", "x-scene"],
+];
+
+/* ------------------------------------------------------------------ *
+ *  The registry
+ *
+ *  One place decides which array is in play. Everything downstream — the
+ *  chips on setup, the draw, the tests — reads a pack id off this and
+ *  never branches on the pack itself.
+ * ------------------------------------------------------------------ */
+
+export const PACK_IDS = ["clean", "rude", "explicit"];
+
+export const PACKS = {
+  clean: {
+    id: "clean",
+    name: "Clean",
+    pairs: PAIRS,
+    categories: CATEGORIES,
+    blurb: "Everyday things — food, animals, places, films. Fine for any table.",
+  },
+  rude: {
+    id: "rude",
+    name: "Rude",
+    pairs: DIRTY_PAIRS,
+    categories: DIRTY_CATEGORIES,
+    blurb:
+      "Dating, hangovers, bad habits and a lot of innuendo. Nothing you couldn't say at a work party, but read the room.",
+  },
+  explicit: {
+    id: "explicit",
+    name: "Explicit",
+    pairs: EXPLICIT_PAIRS,
+    categories: EXPLICIT_CATEGORIES,
+    blurb:
+      "Sex, anatomy, kinks and the kit. No euphemism. Adults who have all agreed to it, and nobody's colleagues.",
+  },
+};
+
+/* Accepts a pack id, and also the boolean this setting used to be, so a
+ * setup restored from a browser that last saw the two-pack version comes
+ * back as something valid instead of undefined. */
+export function normalizePack(value) {
+  if (value === true) return "rude";
+  if (value === false || value === null || value === undefined) return "clean";
+  return PACK_IDS.includes(value) ? value : "clean";
+}
+
+export const packFor = (pack) => PACKS[normalizePack(pack)];
 
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
 export const DIRTY_CATEGORY_IDS = DIRTY_CATEGORIES.map((c) => c.id);
+export const EXPLICIT_CATEGORY_IDS = EXPLICIT_CATEGORIES.map((c) => c.id);
 
 /* Static data, so this either always passes or always throws. Scoped
  * PER PACK: a game only ever draws from one of them, so a word is free
- * to appear in both where it genuinely belongs in both — but never
- * twice within the pack that is actually in play. */
-for (const [label, pairs, categories] of [
-  ["clean", PAIRS, CATEGORIES],
-  ["rude", DIRTY_PAIRS, DIRTY_CATEGORIES],
-]) {
+ * to appear in more than one where it genuinely belongs in both — but
+ * never twice within the pack that is actually in play. */
+const SINGLE_WORD = /^\p{L}+$/u;
+
+for (const id of PACK_IDS) {
+  const { pairs, categories } = PACKS[id];
   const ids = categories.map((c) => c.id);
   const known = new Set(ids);
   // A pair tagged with a category that has no chip is unreachable from the
   // setup screen — invisible, and only in one filter combination.
   const orphans = [...new Set(pairs.map((p) => p[2]).filter((c) => !known.has(c)))];
   if (orphans.length)
-    throw new Error(label + " pairs in unknown categories: " + orphans.join(", "));
+    throw new Error(id + " pairs in unknown categories: " + orphans.join(", "));
   const empty = ids.filter((c) => !pairs.some((p) => p[2] === c));
   if (empty.length)
-    throw new Error(label + " categories with no pairs: " + empty.join(", "));
+    throw new Error(id + " categories with no pairs: " + empty.join(", "));
   const seen = new Set();
   for (const [a, b] of pairs) {
     for (const w of [a, b]) {
+      // Single words only. A phrase is harder to describe without saying
+      // half of it, and Mr. Shake has to type the civilian word back at
+      // the end — "Netflix and chill" is a spelling test, not a guess.
+      if (!SINGLE_WORD.test(w))
+        throw new Error('"' + w + '" is not a single word (' + id + " pack)");
       const k = w.toLowerCase();
       if (seen.has(k))
-        throw new Error('"' + w + '" appears in more than one ' + label + " pair");
+        throw new Error('"' + w + '" appears in more than one ' + id + " pair");
       seen.add(k);
     }
   }
 }
 
-// The two packs must not share a category id, or a selection made in one
-// would survive a switch and quietly filter the other.
-{
-  const overlap = CATEGORY_IDS.filter((c) => DIRTY_CATEGORY_IDS.includes(c));
-  if (overlap.length) throw new Error("category ids shared between packs: " + overlap.join(", "));
+// No two packs may share a category id, or a selection made in one would
+// survive a switch and quietly filter another.
+for (let i = 0; i < PACK_IDS.length; i++) {
+  for (let j = i + 1; j < PACK_IDS.length; j++) {
+    const a = PACKS[PACK_IDS[i]].categories.map((c) => c.id);
+    const b = new Set(PACKS[PACK_IDS[j]].categories.map((c) => c.id));
+    const overlap = a.filter((c) => b.has(c));
+    if (overlap.length)
+      throw new Error(
+        "category ids shared between " + PACK_IDS[i] + " and " + PACK_IDS[j] + ": " + overlap.join(", ")
+      );
+  }
 }

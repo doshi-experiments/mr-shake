@@ -12,7 +12,7 @@
  *  away regardless. See revealFor().
  * ------------------------------------------------------------------ */
 
-import { packFor } from "./words.js";
+import { packFor, normalizePack } from "./words.js";
 
 export const CIVILIAN = "civilian";
 export const UNDERCOVER = "undercover";
@@ -102,8 +102,8 @@ export function defaultNames(n) {
 
 /* ---------------- dealing ---------------- */
 
-export function pickPair(rng, { categories = null, used = [], spicy = false } = {}) {
-  const all = packFor(spicy).pairs;
+export function pickPair(rng, { categories = null, used = [], pack = "clean" } = {}) {
+  const all = packFor(pack).pairs;
   let pool = all;
   if (categories && categories.length) pool = pool.filter((p) => categories.includes(p[2]));
   if (!pool.length) pool = all;
@@ -125,14 +125,41 @@ export function pickPair(rng, { categories = null, used = [], spicy = false } = 
   };
 }
 
-export function dealRoles({ names, undercovers, mrShakes }, pair, rng) {
+/* Being Mr. Shake twice running is the one repeat people notice, because
+ * the role is the memorable one and the table is usually the same six
+ * people all evening. The seats that held it last game are moved off it
+ * after the shuffle rather than being excluded from it, which keeps the
+ * shuffle itself uniform and the whole thing replayable from a seed. */
+function moveShakeOffRepeats(dealt, avoid, rng) {
+  if (!avoid || !avoid.length) return dealt;
+  const banned = new Set(avoid);
+  const out = dealt.slice();
+  for (let i = 0; i < out.length; i++) {
+    if (out[i] !== MRSHAKE || !banned.has(i)) continue;
+    const swappable = [];
+    for (let j = 0; j < out.length; j++)
+      if (out[j] !== MRSHAKE && !banned.has(j)) swappable.push(j);
+    // Everybody else either held it last game too or is holding it again
+    // this one. There is nowhere clean to put it, so the repeat stands —
+    // a game that deals is better than a constraint that cannot be met.
+    if (!swappable.length) continue;
+    const j = swappable[Math.floor(rng() * swappable.length)];
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+export const shakesAmong = (players) =>
+  players.filter((p) => p.role === MRSHAKE).map((p) => p.id);
+
+export function dealRoles({ names, undercovers, mrShakes }, pair, rng, { avoidMrShake = [] } = {}) {
   const n = names.length;
   const roles = [];
   for (let i = 0; i < undercovers; i++) roles.push(UNDERCOVER);
   for (let i = 0; i < mrShakes; i++) roles.push(MRSHAKE);
   while (roles.length < n) roles.push(CIVILIAN);
 
-  const dealt = shuffle(roles, rng);
+  const dealt = moveShakeOffRepeats(shuffle(roles, rng), avoidMrShake, rng);
   return names.map((name, i) => ({
     id: i,
     name: name && name.trim() ? name.trim() : "Player " + (i + 1),
@@ -268,10 +295,11 @@ export function initialState() {
       ...defaultComposition(6),
       names: defaultNames(6),
       voteMode: "aloud",          // "aloud" | "ballot"
-      spicy: false,               // false = the clean pack
+      pack: "clean",              // "clean" | "rude" | "explicit"
       categories: [],             // empty means every category in the pack
     },
     usedPairs: [],
+    lastShakes: [],               // seats that held Mr. Shake in the last deal
     players: [],
     pair: null,
     round: 0,
@@ -369,7 +397,7 @@ export function reduce(state, action, rng = Math.random) {
     case "setup/setPack":
       return {
         ...state,
-        setup: { ...state.setup, spicy: !!action.spicy, categories: [] },
+        setup: { ...state.setup, pack: normalizePack(action.pack), categories: [] },
       };
     case "setup/toggleCategory": {
       const cur = state.setup.categories;
@@ -385,15 +413,16 @@ export function reduce(state, action, rng = Math.random) {
       const pair = pickPair(rng, {
         categories: state.setup.categories,
         used: state.usedPairs,
-        spicy: state.setup.spicy,
+        pack: state.setup.pack,
       });
-      const players = dealRoles(state.setup, pair, rng);
+      const players = dealRoles(state.setup, pair, rng, { avoidMrShake: state.lastShakes });
       return {
         ...state,
         phase: "reveal",
         pair,
         usedPairs: state.usedPairs.concat(pair.id),
         players,
+        lastShakes: shakesAmong(players),
         round: 0,
         revealIndex: 0,
         revealStage: "pass",
@@ -513,20 +542,27 @@ export function reduce(state, action, rng = Math.random) {
       const pair = pickPair(rng, {
         categories: state.setup.categories,
         used: state.usedPairs,
-        spicy: state.setup.spicy,
+        pack: state.setup.pack,
       });
-      const players = dealRoles(state.setup, pair, rng);
+      const players = dealRoles(state.setup, pair, rng, { avoidMrShake: state.lastShakes });
       return {
         ...initialState(),
         setup: state.setup,
         usedPairs: state.usedPairs.concat(pair.id),
+        lastShakes: shakesAmong(players),
         phase: "reveal",
         pair,
         players,
       };
     }
     case "game/reset":
-      return { ...initialState(), setup: state.setup, usedPairs: state.usedPairs };
+      // Same table stands up again, so who last held Mr. Shake still counts.
+      return {
+        ...initialState(),
+        setup: state.setup,
+        usedPairs: state.usedPairs,
+        lastShakes: state.lastShakes,
+      };
 
     default:
       return state;

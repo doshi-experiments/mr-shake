@@ -33,10 +33,17 @@ being a game and being a formality:
   is caught on the first clue and the round is dead.
 - **Which side of a pair is the civilian word is random.** Otherwise a group
   learns that Tea is always the impostor and the pack burns out.
+- **Nobody is Mr. Shake twice running.** It is the memorable role and the table
+  is usually the same six people all evening, so a fair shuffle that hands it
+  back to the same person reads as broken even though it isn't. Seats that held
+  it last deal are moved off it afterwards, which keeps the shuffle uniform and
+  the deal replayable from a seed. If there is nowhere legal to move it, the
+  deal still happens — a game that deals beats a constraint that always holds.
+- **An elimination reveals nothing while the game is running.** See below.
 
 ## The words
 
-266 pairs in `src/words.js`, split across two packs the setup screen switches
+301 pairs in `src/words.js`, split across three packs the setup screen switches
 between. A pair only works inside a narrow band. Too far apart and the first
 clue exposes the impostor — nobody describes *Apple* and *Car* the same way.
 Too close and there is no signal at all: *Sofa* and *Couch* produce identical
@@ -44,34 +51,49 @@ clues and the round is a coin flip.
 
 What works is same category, most attributes shared, one or two salient
 differences: `Coffee / Tea`, `Butterfly / Moth`, `Hotel / Motel`,
-`Alligator / Crocodile`, `Museum / Art gallery`. Both sides also have to be
+`Alligator / Crocodile`, `Whip / Paddle`. Both sides also have to be
 describable without saying them, which rules out most abstract nouns.
 
-**Clean** — 176 pairs across ten categories, in `PAIRS`. Food, animals, places,
-films, travel, everyday life. Fine for any table.
+**Every word is a single word.** No spaces, no hyphens, enforced by an
+assertion rather than by discipline. Two reasons, and the second is the one
+that actually bites: a phrase is hard to describe without saying half of it —
+*Netflix and chill* leaks *Netflix* on the first clue — and Mr. Shake has to
+type the civilian word back at the end, where a phrase turns the guess into a
+spelling test. Dropping the rule cost about 20% of the clean pack and most of
+the rude one, and both read better for it.
 
-**Rude** — 90 pairs across five categories, in `DIRTY_PAIRS`: Dating, Big night
-out, Body, Bad habits, Grown-up life. Cheeky rather than explicit, and that is a
-design decision before it is a taste one. The mechanic needs a word you can
-gesture at sideways for one clue; graphic anatomy collapses a round into
-laughing instead of deducing, and the two halves of an explicit pair usually
-read as the same thing, which kills the signal the whole game runs on.
-`Hangover / Still drunk` and `Ghosting / Breadcrumbing` give clues somewhere to
-go in a way that a pair of body parts does not.
+| Pack | Pairs | Categories | |
+| --- | --- | --- | --- |
+| Clean | 176 | 10 | Food, animals, places, films, travel. Fine for any table. |
+| Rude | 65 | 5 | Dating, nights out, bodies, bad habits. Innuendo, not anatomy. |
+| Explicit | 60 | 5 | Sex, anatomy, kinks, kit. No euphemism. |
+
+The line between the second and third is a design decision before it is a taste
+one. Innuendo gives a clue somewhere to go — you can gesture sideways at
+*Hangover* for a whole turn. The explicit pack has to work harder to stay
+playable, because two words for the same act produce identical clues and the
+round becomes a coin flip; its pairs are built as neighbours rather than
+synonyms for exactly that reason, which is why `Bondage / Discipline` is in and
+a pair of bare synonyms is not.
 
 The packs are a swap, not a mix. A game draws from exactly one of them, chosen
-before the deal and carried through *play again*, and `packFor(spicy)` is the
-single place that decides which. Rude category ids are prefixed `d-` so they
-cannot collide with clean ones, and switching packs clears the category
-selection outright — a stale filter that silently matched nothing would look
-like the game had run out of words.
+before the deal and carried through *play again*, and `packFor(pack)` is the
+single place that decides which. Category ids are prefixed per pack — `d-` for
+rude, `x-` for explicit — so a selection cannot collide across packs, and
+switching packs clears the category selection outright: a stale filter that
+silently matched nothing would look like the game had run out of words.
 
-Adding pairs means adding rows to `PAIRS` or `DIRTY_PAIRS`. Module-level
-assertions run per pack and throw if a word appears in two pairs within its own
-pack, if a pair is tagged with a category that has no chip on the setup screen,
-or if a category has no pairs at all — each is invisible on screen and only
-bites occasionally. Duplication *across* packs is allowed, since a word that
-belongs in both can never be drawn twice in one game.
+Adding pairs means adding rows to `PAIRS`, `DIRTY_PAIRS` or `EXPLICIT_PAIRS`.
+Module-level assertions run per pack and throw if a word is not a single word,
+if a word appears in two pairs within its own pack, if a pair is tagged with a
+category that has no chip on the setup screen, or if a category has no pairs at
+all — each is invisible on screen and only bites occasionally. Duplication
+*across* packs is allowed, since a word that belongs in more than one can never
+be drawn twice in the same game.
+
+The setting used to be a boolean called `spicy`, so `normalizePack()` still
+accepts `true`/`false` and maps them onto pack ids. A phone that installed the
+two-pack version keeps its choice instead of silently reverting to clean.
 
 ## Shared-screen secrecy
 
@@ -111,11 +133,35 @@ a phone locking or an accidental reload resumes on the same player with the
 card face down rather than ending the evening. A Screen Wake Lock keeps the
 screen up during discussion, where supported.
 
+The same three stages are reused for the eye beside each name on the describe
+list, which hands the phone back to somebody who has forgotten their word. The
+risk there is identical — whoever is holding the phone is not necessarily the
+person whose word is about to be on screen — so it gets the same hand-over
+gate, the same face-down card and the same lockout rather than a shortcut. The
+peek is component state, not game state, so a reload mid-peek lands back on the
+describe list rather than resuming with a word on screen.
+
+### An elimination is not a reveal
+
+Voting somebody out says only that they are out. Not their role, not their
+word. Announcing *"was a civilian, their word was Butter"* mid-game hands every
+surviving impostor the civilian word and tells an undercover which side they
+are on, which is the entire game — and the person running it is usually playing
+too, so there is nobody it is safe to show. Everything comes out at game over.
+
+The one exception is Mr. Shake, and only because it is already public: the
+table watched them be handed the phone to name the word.
+
+The live impostor count went with it. Watching *2 impostors* become *1* is the
+elimination reveal arriving by another route, so the between-rounds line shows
+the composition dealt at the start instead — chosen on the setup screen in
+front of everybody, and it never moves.
+
 ## Layout
 
 ```
 src/game.js      the rules. Pure — no React, no DOM, no Math.random
-src/words.js     both word packs, clean and rude
+src/words.js     the three word packs, and the rules they must obey
 src/App.jsx      screens and components
 src/app.css      tokens, theme, layout
 src/main.jsx     entry point, registers the service worker
@@ -130,11 +176,11 @@ straight into Node with no build step.
 ## Tests
 
 ```bash
-npm test                     # rules — 100 assertions
+npm test                     # rules — 120 assertions
 
 ./build.sh
 node test/serve.mjs &        # serves dist/ on 8123
-node test/e2e.mjs            # browser — 65 assertions, 390×844
+node test/e2e.mjs            # browser — 85 assertions, 390×844
 ```
 
 The rules suite runs 800 seeded playthroughs across both vote modes and
@@ -145,18 +191,21 @@ payload and an undercover's are **the same shape** — if either is ever told
 which they are, the game is destroyed while still looking perfectly reasonable
 on screen.
 
-Both packs are checked the same way, and the swap is tested rather than assumed:
-400 draws from each are asserted to come entirely from the pack that was
-selected, switching packs is asserted to clear the category selection, and a
-spicy game is played through far enough to confirm every civilian is holding a
-word from `DIRTY_PAIRS`.
+All three packs are checked the same way, and the swap is tested rather than
+assumed: 400 draws from each are asserted to come entirely from the pack that
+was selected, switching packs is asserted to clear the category selection, and
+a game on each pack is played far enough to confirm the dealt pair came from
+it. Mr. Shake is dealt 200 consecutive times and asserted never to land on the
+same seat twice running while still reaching every seat at the table.
 
 The browser suite fires two clicks 60 ms apart at each step of the reveal and
 checks the player index moved by exactly one, reloads mid-reveal to confirm
-nothing is exposed, and plays complete games both ways round. It also flips the
-pack on the setup screen, confirms the category chips swap with it, and reads
-the dealt pair back out of the running game to prove it came from the rude
-pack.
+nothing is exposed, and plays complete games both ways round. It also flips
+between all three packs and confirms the chips swap with them, opens a peek
+from the describe list and asserts the word shown is the one that seat was
+actually dealt, and — the one worth having — votes a player out and asserts
+that neither word, nor the phrase *was a civilian*, nor a live impostor count
+appears anywhere on the resulting screen.
 
 ## Build and deploy
 
