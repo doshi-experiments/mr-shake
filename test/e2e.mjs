@@ -569,7 +569,7 @@ await go();
      !(await evalJs("!!document.querySelector('.word-card .word')")));
 }
 
-head("Voting somebody out gives nothing away");
+head("An elimination names the role but never the word");
 {
   const pair = await evalJs(`(() => {
     const s = JSON.parse(sessionStorage.getItem('mr-shake:game'));
@@ -580,9 +580,6 @@ head("Voting somebody out gives nothing away");
   await evalJs("document.querySelector('.player-btn').click()"); await sleep(250);
   await click("yes, they're out"); await sleep(STEP);
 
-  // Catching Mr. Shake is public by design — they are handed the phone to
-  // guess in front of everybody — so step past it to reach the screen the
-  // rest of the table sees.
   if ((await phase()) === "shakeGuess") {
     await evalJs(`(() => {
       const i = document.querySelector('.guess-input');
@@ -594,15 +591,16 @@ head("Voting somebody out gives nothing away");
 
   if ((await phase()) === "elimination") {
     const screen = await text();
-    ok("neither word is printed on the elimination screen",
+    ok("the table is told which side they were on",
+       /was (a civilian|an undercover|mr\. shake)/.test(screen), screen.slice(0, 90));
+    // The whole point: the word is still in play for everybody left.
+    ok("but neither word is printed anywhere on the screen",
        !screen.includes(pair[0].toLowerCase()) && !screen.includes(pair[1].toLowerCase()),
        pair.join(" / "));
-    ok("and it never says which side they were on",
-       !screen.includes("was a civilian") && !screen.includes("was an undercover"), screen.slice(0, 90));
-    ok("the live impostor count is gone — it leaked the same fact",
-       !/impostors? still among them/.test(screen));
-    ok("what it shows instead is the composition dealt at the start",
-       screen.includes("dealt at the start"), screen.slice(0, 120));
+    ok("and it says so, rather than leaving a gap people argue about",
+       screen.includes("word stays secret"));
+    ok("the impostor count is still shown — the reveals make it public anyway",
+       /impostors? still among them/.test(screen));
   } else {
     ok("the game ended on this vote, so nothing was withheld", true, await phase());
   }

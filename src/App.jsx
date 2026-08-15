@@ -786,25 +786,14 @@ function ShakeGuess({ state, dispatch }) {
  *  What just happened
  * ------------------------------------------------------------------ */
 
-/* What the room is allowed to know between rounds.
- *
- * NOT the number of impostors still alive. That is the elimination
- * reveal arriving by another route: watch it drop from two to one and
- * you have been told exactly what hiding the card was meant to withhold.
- * The dealt composition is genuinely public — it was chosen on the setup
- * screen in front of everybody — and it never moves, so it gives the
- * table something true to reason from without handing them the answer. */
+/* Alive count and impostors left. Both are public: which side each
+ * eliminated player was on is announced as they go, so the number left
+ * is arithmetic anybody at the table can already do. */
 function Standing({ state }) {
   const c = counts(state.players);
-  const { undercovers, mrShakes } = state.setup;
-  const dealt = [
-    undercovers + (undercovers === 1 ? " undercover" : " undercovers"),
-    mrShakes ? mrShakes === 1 ? "1 Mr. Shake" : mrShakes + " Mr. Shakes" : null,
-  ].filter(Boolean).join(" and ");
-
   return (
     <p className="fine center">
-      {c.alive} still in · {dealt} dealt at the start
+      {c.alive} still in · {c.impostors} {c.impostors === 1 ? "impostor" : "impostors"} still among them
     </p>
   );
 }
@@ -812,13 +801,6 @@ function Standing({ state }) {
 function Elimination({ state, dispatch }) {
   const victim = state.players.find((p) => p.id === state.lastEliminated);
   const shake = state.shakeGuess;
-  /* Mr. Shake being caught is already public — the whole table watched
-   * them be handed the phone to name the word — so there is nothing left
-   * to protect in that one case. Everybody else keeps their card until
-   * the game is actually over. Announcing "was a civilian, their word was
-   * Butter" mid-game hands the remaining impostors the word and tells an
-   * undercover which side they are on, which is the entire game. */
-  const shakeCaught = victim && victim.role === MRSHAKE;
 
   return (
     <div className="stage center stack--loose">
@@ -826,25 +808,20 @@ function Elimination({ state, dispatch }) {
         <div className="stack--tight stack">
           <p className="eyebrow">Round {state.round}</p>
           <p className="who">{victim.name}</p>
-          {shakeCaught ? (
-            <>
-              <h2 className="subtitle" style={{ color: roleColor(MRSHAKE) }}>
-                was Mr. Shake
-              </h2>
-              {shake && (
-                <p className="lede">
-                  They guessed “{shake.guess}” — {shake.correct ? "right" : "wrong"}.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <h2 className="subtitle">is out</h2>
-              <p className="lede">
-                What they were stays secret until the game ends. Keep your own
-                word to yourself — this is not over.
-              </p>
-            </>
+          <h2 className="subtitle" style={{ color: roleColor(victim.role) }}>
+            was {victim.role === MRSHAKE ? "Mr. Shake"
+                 : victim.role === UNDERCOVER ? "an undercover" : "a civilian"}
+          </h2>
+          {/* Which side they were on is the result of the vote and belongs
+           * to the table. The word they were holding does not: the game is
+           * still running, and printing "their word was Butter" hands the
+           * surviving impostors the civilian word outright — or, off an
+           * undercover, tells everyone how close the two halves are. */}
+          <p className="fine">Their word stays secret until the game is over.</p>
+          {shake && victim.role === MRSHAKE && (
+            <p className="lede">
+              They guessed “{shake.guess}” — {shake.correct ? "right" : "wrong"}.
+            </p>
           )}
         </div>
       ) : (

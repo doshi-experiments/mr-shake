@@ -39,7 +39,7 @@ being a game and being a formality:
   it last deal are moved off it afterwards, which keeps the shuffle uniform and
   the deal replayable from a seed. If there is nowhere legal to move it, the
   deal still happens — a game that deals beats a constraint that always holds.
-- **An elimination reveals nothing while the game is running.** See below.
+- **An elimination reveals the role but not the word.** See below.
 
 ## The words
 
@@ -141,21 +141,22 @@ gate, the same face-down card and the same lockout rather than a shortcut. The
 peek is component state, not game state, so a reload mid-peek lands back on the
 describe list rather than resuming with a word on screen.
 
-### An elimination is not a reveal
+### An elimination names the role, never the word
 
-Voting somebody out says only that they are out. Not their role, not their
-word. Announcing *"was a civilian, their word was Butter"* mid-game hands every
-surviving impostor the civilian word and tells an undercover which side they
-are on, which is the entire game — and the person running it is usually playing
-too, so there is nobody it is safe to show. Everything comes out at game over.
+Voting somebody out announces which side they were on — *was a civilian*, *was
+an undercover*, *was Mr. Shake* — because that is the result of the vote and it
+belongs to the table. What it no longer prints is the word they were holding.
 
-The one exception is Mr. Shake, and only because it is already public: the
-table watched them be handed the phone to name the word.
+The game is usually still running at that point, and *"their word was Butter"*
+hands every surviving impostor the civilian word outright; off an undercover it
+gives away how close the two halves are, which is nearly as bad. The person
+running the game is normally playing too, so there is no one it is safe to show
+it to. The screen says the word is being withheld rather than leaving a gap,
+and everything comes out at game over.
 
-The live impostor count went with it. Watching *2 impostors* become *1* is the
-elimination reveal arriving by another route, so the between-rounds line shows
-the composition dealt at the start instead — chosen on the setup screen in
-front of everybody, and it never moves.
+The live impostor count stays. The role reveals make it arithmetic anybody at
+the table can already do, so hiding it would withhold nothing and only make the
+board harder to read.
 
 ## Layout
 
@@ -204,8 +205,8 @@ nothing is exposed, and plays complete games both ways round. It also flips
 between all three packs and confirms the chips swap with them, opens a peek
 from the describe list and asserts the word shown is the one that seat was
 actually dealt, and — the one worth having — votes a player out and asserts
-that neither word, nor the phrase *was a civilian*, nor a live impostor count
-appears anywhere on the resulting screen.
+that the screen names their role while printing neither of the two words
+anywhere on it.
 
 ## Build and deploy
 
