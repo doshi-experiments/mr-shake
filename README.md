@@ -43,7 +43,7 @@ being a game and being a formality:
 
 ## The words
 
-301 pairs in `src/words.js`, split across three packs the setup screen switches
+281 pairs in `src/words.js`, split across three packs the setup screen switches
 between. A pair only works inside a narrow band. Too far apart and the first
 clue exposes the impostor — nobody describes *Apple* and *Car* the same way.
 Too close and there is no signal at all: *Sofa* and *Couch* produce identical
@@ -51,8 +51,8 @@ clues and the round is a coin flip.
 
 What works is same category, most attributes shared, one or two salient
 differences: `Coffee / Tea`, `Butterfly / Moth`, `Hotel / Motel`,
-`Alligator / Crocodile`, `Whip / Paddle`. Both sides also have to be
-describable without saying them, which rules out most abstract nouns.
+`Crocodile / Hippo`, `Whip / Paddle`. Both sides also have to be describable
+without saying them, which rules out most abstract nouns.
 
 **Every word is a single word.** No spaces, no hyphens, enforced by an
 assertion rather than by discipline. Two reasons, and the second is the one
@@ -66,15 +66,25 @@ the rude one, and both read better for it.
 | --- | --- | --- | --- |
 | Clean | 176 | 10 | Food, animals, places, films, travel. Fine for any table. |
 | Rude | 65 | 5 | Dating, nights out, bodies, bad habits. Innuendo, not anatomy. |
-| Explicit | 60 | 5 | Sex, anatomy, kinks, kit. No euphemism. |
+| Explicit | 40 | 5 | Sex, anatomy, kinks, kit. No euphemism. |
 
 The line between the second and third is a design decision before it is a taste
 one. Innuendo gives a clue somewhere to go — you can gesture sideways at
-*Hangover* for a whole turn. The explicit pack has to work harder to stay
-playable, because two words for the same act produce identical clues and the
-round becomes a coin flip; its pairs are built as neighbours rather than
-synonyms for exactly that reason, which is why `Bondage / Discipline` is in and
-a pair of bare synonyms is not.
+*Hangover* for a whole turn. Explicit has to work harder to stay playable, for
+two reasons stacked on top of each other. First, the usual one: two words for
+the same act produce identical clues and the round becomes a coin flip, so
+pairs are built as neighbours rather than synonyms — `Bondage / Chastity`, not
+a pair of words that mean the same thing.
+
+Second, and specific to this pack: **both words have to be equally
+unsayable.** A pair like `Nipple / Earlobe` looks fine on the neighbour test —
+same region, plausible clue overlap — but the civilian holding *Earlobe* has
+nothing to lose by describing it honestly in front of the table. The entire
+point of the pack is that surviving a round costs something, and a clean word
+on either side removes that cost for whoever holds it. This is why Explicit
+went from 60 pairs to 40 rather than growing: about a third of the original
+set turned out to be one filthy word bolted to one anyone could say out loud
+at work, and cutting them was the point, not a shame.
 
 The packs are a swap, not a mix. A game draws from exactly one of them, chosen
 before the deal and carried through *play again*, and `packFor(pack)` is the
