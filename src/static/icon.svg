@@ -1,9 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#E7E9E3"/>
+  <!-- feltwork-allow-hex
+       A standalone icon file: it is loaded through <link rel="icon"> and
+       rasterised into the PWA icons, so it is never part of a document that
+       has the tokens. Every value below is copied from a measured Feltwork
+       ramp stop and must be kept in step with feltwork/src/tokens.css:
+         paper  #FFFFFF   euca #8BB4AB (civilian)
+         blush  #CC9C9E (undercover)   canary #D6C786 (Mr. Shake)
+       Corners are rounded hard, and there is no gloss — felt is matte. -->
+  <rect width="512" height="512" fill="#FFFFFF"/>
   <!-- Three cards dealt face down; one of them is not like the others. -->
-  <rect x="64"  y="150" width="112" height="212" rx="18" fill="#0F5C52"/>
-  <rect x="200" y="150" width="112" height="212" rx="18" fill="#8C2F5E"/>
-  <rect x="336" y="150" width="112" height="212" rx="18" fill="#0F5C52"/>
-  <circle cx="256" cy="256" r="26" fill="#E7E9E3"/>
-  <circle cx="256" cy="256" r="13" fill="#D9A408"/>
+  <rect x="64"  y="150" width="112" height="212" rx="28" fill="#8BB4AB"/>
+  <rect x="200" y="150" width="112" height="212" rx="28" fill="#CC9C9E"/>
+  <rect x="336" y="150" width="112" height="212" rx="28" fill="#8BB4AB"/>
+  <circle cx="256" cy="256" r="26" fill="#FFFFFF"/>
+  <circle cx="256" cy="256" r="13" fill="#D6C786"/>
 </svg>
