@@ -32,10 +32,8 @@ function applyTheme(t) {
   const root = document.documentElement;
   root.setAttribute("data-theme", t);
   root.style.colorScheme = t;
-  /* The stylesheet has loaded by now, so the ground comes from the token
-     rather than a second copy of it. data-theme is set above, which is what
-     makes this read return the new theme's value. */
-  const bg = getComputedStyle(root).getPropertyValue("--paper").trim();
+  const bg = t === "dark" ? "#0E1C2B" : "#E7E9E3";
+  root.style.setProperty("--ms-bg", bg);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", bg);
 }

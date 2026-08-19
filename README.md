@@ -232,40 +232,9 @@ directory. If wiring it up through Pages instead: framework preset None, build
 command `npm run build`, output directory `dist`.
 
 `dist/` is generated on every build and is not in the repo. Neither are any
-binaries — the design system, its three variable faces and the felt texture all
-come from [Feltwork](https://github.com/doshi-experiments/feltwork) at build
-time, and the PNG icons are decoded from `src/static/icons.b64.json`, so every
-file here is readable text.
-
-Those PNGs are rasterised from `src/static/icon.svg` by
-`node scripts/rebuild-icons.mjs`, which uses headless Chrome because there is
-no image library here. Run it whenever the icon changes, or the home-screen
-icon quietly keeps the old colours.
-
-## Design
-
-Styled with **Feltwork** — "Dieter Rams meets plushie" — the shared system
-across rishabhdoshi.com. `build.sh` concatenates `feltwork.css` ahead of
-`src/app.css`, which is a thin layer of game rules aliasing its tokens. There
-is no raw hex in `app.css`.
-
-Feltwork §2 gives every hue one permanent meaning, but those are portfolio
-categories and mean nothing to a party game, so the ramps are rebound locally:
-
-| | |
-|---|---|
-| eucalyptus | civilian |
-| blush | undercover |
-| canary | Mr. Shake |
-| pencil | focus, and only focus |
-
-Two things the old palette conflated, now separated: role colours were used as
-type as well as fill (felt hues are surface colours — as text they fail AA, so
-each role has a `-ink` alias), and `--shake` doubled as the focus ring, so "Mr.
-Shake" and "focused" were one signal. Focus is the pencil now.
-
-Dark mode flips the ground only — the felt surfaces are identical in both
-themes, so every text-on-felt contrast ratio holds without a second audit.
+binaries — fonts are copied out of the `@ibm/plex-*` packages at build time and
+the PNG icons are decoded from `src/static/icons.b64.json`, so every file here
+is readable text.
 
 ## Notes
 
