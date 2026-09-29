@@ -1,3 +1,5 @@
+import { Button } from "@doshi-experiments/design-system/react";
+import { resolveTokens } from "./design-system/tokens.js";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   CIVILIAN, UNDERCOVER, MRSHAKE, ROLE_LABEL,
@@ -32,7 +34,7 @@ function applyTheme(t) {
   const root = document.documentElement;
   root.setAttribute("data-theme", t);
   root.style.colorScheme = t;
-  const bg = t === "dark" ? "#0E1C2B" : "#E7E9E3";
+  const bg = resolveTokens({project: "game", appearance: t})["surface-page"];
   root.style.setProperty("--ms-bg", bg);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", bg);
@@ -150,14 +152,14 @@ function Stepper({ label, value, min, max, onChange, suffix }) {
     <div className="field">
       <span className="label">{label}</span>
       <div className="stepper">
-        <button className="stepper__btn" type="button" aria-label={"Fewer " + label.toLowerCase()}
-                disabled={value <= min} onClick={() => onChange(value - 1)}>−</button>
+        <Button className="stepper__btn" type="button" aria-label={"Fewer " + label.toLowerCase()}
+                disabled={value <= min} onClick={() => onChange(value - 1)}>−</Button>
         <span className="stepper__value" aria-live="polite">
           {value}
           {suffix && <small>{suffix}</small>}
         </span>
-        <button className="stepper__btn" type="button" aria-label={"More " + label.toLowerCase()}
-                disabled={value >= max} onClick={() => onChange(value + 1)}>+</button>
+        <Button className="stepper__btn" type="button" aria-label={"More " + label.toLowerCase()}
+                disabled={value >= max} onClick={() => onChange(value + 1)}>+</Button>
       </div>
     </div>
   );
@@ -172,11 +174,11 @@ function RoleRow({ kind, name, note, count, min, max, onChange }) {
       </div>
       {onChange ? (
         <div className="stepper" style={{ gap: "0.375rem" }}>
-          <button className="stepper__btn" type="button" aria-label={"Fewer " + name}
-                  disabled={count <= min} onClick={() => onChange(count - 1)}>−</button>
+          <Button className="stepper__btn" type="button" aria-label={"Fewer " + name}
+                  disabled={count <= min} onClick={() => onChange(count - 1)}>−</Button>
           <span className="role-row__count">{count}</span>
-          <button className="stepper__btn" type="button" aria-label={"More " + name}
-                  disabled={count >= max} onClick={() => onChange(count + 1)}>+</button>
+          <Button className="stepper__btn" type="button" aria-label={"More " + name}
+                  disabled={count >= max} onClick={() => onChange(count + 1)}>+</Button>
         </div>
       ) : (
         <span className="role-row__count">{count}</span>
@@ -198,15 +200,15 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
       <span className="sheet-no">E-04.1 · Mr. Shake</span>
       <span className="chrome-spacer" />
       {canReset && (
-        <button
+        <Button
           type="button"
           className={"btn btn--small " + (confirming ? "btn--danger" : "btn--ghost")}
           onClick={() => (confirming ? onReset() : setConfirming(true))}
         >
           {confirming ? "End the game?" : "End game"}
-        </button>
+        </Button>
       )}
-      <button
+      <Button
         type="button"
         className="switch"
         role="switch"
@@ -217,7 +219,7 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
         <span className="switch__track">
           <span className="switch__dot">{theme === "light" ? "☀" : "☾"}</span>
         </span>
-      </button>
+      </Button>
     </header>
   );
 }
@@ -305,14 +307,14 @@ function Setup({ state, dispatch }) {
       <div className="stack--tight stack">
         <span className="label">How you vote</span>
         <div className="segmented">
-          <button type="button" className="chip" aria-pressed={s.voteMode === "aloud"}
+          <Button type="button" className="chip" aria-pressed={s.voteMode === "aloud"}
                   onClick={() => patch({ voteMode: "aloud" })}>
             Out loud
-          </button>
-          <button type="button" className="chip" aria-pressed={s.voteMode === "ballot"}
+          </Button>
+          <Button type="button" className="chip" aria-pressed={s.voteMode === "ballot"}
                   onClick={() => patch({ voteMode: "ballot" })}>
             Secret ballot
-          </button>
+          </Button>
         </div>
         <p className="fine">
           {s.voteMode === "aloud"
@@ -325,12 +327,12 @@ function Setup({ state, dispatch }) {
         <span className="label">Words</span>
         <div className="segmented">
           {PACK_IDS.map((id) => (
-            <button key={id} type="button"
+            <Button key={id} type="button"
                     className={"chip chip--pack-" + id}
                     aria-pressed={pack === id}
                     onClick={() => dispatch({ type: "setup/setPack", pack: id })}>
               {PACKS[id].name}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="fine">{PACKS[pack].blurb}</p>
@@ -340,11 +342,11 @@ function Setup({ state, dispatch }) {
         <span className="label">Narrow it down</span>
         <div className="chips">
           {categories.map((c) => (
-            <button key={c.id} type="button" className="chip"
+            <Button key={c.id} type="button" className="chip"
                     aria-pressed={s.categories.includes(c.id)}
                     onClick={() => dispatch({ type: "setup/toggleCategory", id: c.id })}>
               {c.name}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="fine">
@@ -352,11 +354,11 @@ function Setup({ state, dispatch }) {
         </p>
       </div>
 
-      <button type="button" className="btn btn--primary btn--tall"
+      <Button type="button" className="btn btn--primary btn--tall"
               disabled={errors.length > 0}
               onClick={() => dispatch({ type: "game/start" })}>
         Deal the words
-      </button>
+      </Button>
     </div>
   );
 }
@@ -411,9 +413,9 @@ function PassScreen({ player, index, total, locked, onAccept, onRename }) {
               autoCorrect="off"
               onChange={(e) => setDraft(e.target.value)}
             />
-            <button type="submit" className="btn btn--primary" disabled={!draft.trim()}>
+            <Button type="submit" className="btn btn--primary" disabled={!draft.trim()}>
               Save
-            </button>
+            </Button>
           </form>
         ) : (
           <p className="who">{player.name}</p>
@@ -422,16 +424,16 @@ function PassScreen({ player, index, total, locked, onAccept, onRename }) {
 
       {!editing && (
         <>
-          <button type="button" className="btn btn--ghost btn--small rename__open"
+          <Button type="button" className="btn btn--ghost btn--small rename__open"
                   onClick={() => { setDraft(player.name); setEditing(true); }}>
             Not {player.name}?
-          </button>
+          </Button>
           {/* Centre of the screen — the same place the reveal tap lands, so
               a double tap here only ever gets you to a face-down card. */}
-          <button type="button" className="btn btn--primary btn--tall" disabled={locked}
+          <Button type="button" className="btn btn--primary btn--tall" disabled={locked}
                   onClick={onAccept}>
             I'm {player.name}
-          </button>
+          </Button>
           <p className="fine">Nobody else should be looking.</p>
         </>
       )}
@@ -463,13 +465,13 @@ function Reveal({ state, dispatch }) {
     return (
       <div className="stage center stack--loose">
         <p className="eyebrow">{player.name} · card {state.revealIndex + 1} of {total}</p>
-        <button type="button"
+        <Button type="button"
                 className="word-card word-card--face-down"
                 disabled={locked}
                 onClick={() => dispatch({ type: "reveal/show" })}>
           <span className="lede">Tap to see your word</span>
           <span className="fine">Keep it to yourself</span>
-        </button>
+        </Button>
       </div>
     );
   }
@@ -493,10 +495,10 @@ function Reveal({ state, dispatch }) {
         </div>
       )}
       {/* Bottom of the screen, deliberately far from the reveal target. */}
-      <button type="button" className="btn" disabled={locked}
+      <Button type="button" className="btn" disabled={locked}
               onClick={() => dispatch({ type: "reveal/hide" })}>
         {state.revealIndex + 1 === total ? "Hide and start" : "Hide and pass on"}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -540,14 +542,14 @@ function PeekWord({ player, onDone }) {
           <p className="lede">Pass the phone back to</p>
           <p className="who">{player.name}</p>
         </div>
-        <button type="button" className="btn btn--ghost btn--small"
+        <Button type="button" className="btn btn--ghost btn--small"
                 onClick={onDone}>
           Never mind
-        </button>
-        <button type="button" className="btn btn--primary btn--tall" disabled={locked}
+        </Button>
+        <Button type="button" className="btn btn--primary btn--tall" disabled={locked}
                 onClick={() => setStage("hidden")}>
           I'm {player.name}
-        </button>
+        </Button>
         <p className="fine">Nobody else should be looking.</p>
       </div>
     );
@@ -557,11 +559,11 @@ function PeekWord({ player, onDone }) {
     return (
       <div className="stage center stack--loose">
         <p className="eyebrow">{player.name}</p>
-        <button type="button" className="word-card word-card--face-down" disabled={locked}
+        <Button type="button" className="word-card word-card--face-down" disabled={locked}
                 onClick={() => setStage("shown")}>
           <span className="lede">Tap to see your word again</span>
           <span className="fine">Keep it to yourself</span>
-        </button>
+        </Button>
       </div>
     );
   }
@@ -580,9 +582,9 @@ function PeekWord({ player, onDone }) {
           <span className="word">{card.word}</span>
         </div>
       )}
-      <button type="button" className="btn" disabled={locked} onClick={onDone}>
+      <Button type="button" className="btn" disabled={locked} onClick={onDone}>
         Hide and carry on
-      </button>
+      </Button>
     </div>
   );
 }
@@ -616,17 +618,17 @@ function Describe({ state, dispatch }) {
           const done = state.spoken.includes(id);
           return (
             <li key={id} className="order-row">
-              <button type="button" className="order-item" aria-pressed={done}
+              <Button type="button" className="order-item" aria-pressed={done}
                       onClick={() => dispatch({ type: "describe/toggleSpoken", id })}>
                 <span className="order-item__n">{i + 1}</span>
                 <span className="order-item__name">{byId[id].name}</span>
                 <span className="order-item__tick">{done ? "✓" : ""}</span>
-              </button>
-              <button type="button" className="order-peek"
+              </Button>
+              <Button type="button" className="order-peek"
                       aria-label={"Show " + byId[id].name + " their word again"}
                       onClick={() => setPeekId(id)}>
                 <EyeIcon />
-              </button>
+              </Button>
             </li>
           );
         })}
@@ -634,10 +636,10 @@ function Describe({ state, dispatch }) {
 
       <Standing state={state} />
 
-      <button type="button" className="btn btn--primary btn--tall"
+      <Button type="button" className="btn btn--primary btn--tall"
               onClick={() => dispatch({ type: "describe/done" })}>
         Everyone's spoken — vote
-      </button>
+      </Button>
     </div>
   );
 }
@@ -659,14 +661,14 @@ function VoteAloud({ state, dispatch }) {
         <p className="lede">The group votes out</p>
         <p className="who">{pending.name}</p>
         <div className="stack--tight stack">
-          <button type="button" className="btn btn--danger btn--tall"
+          <Button type="button" className="btn btn--danger btn--tall"
                   onClick={() => dispatch({ type: "vote/confirm" })}>
             Yes, they're out
-          </button>
-          <button type="button" className="btn btn--ghost"
+          </Button>
+          <Button type="button" className="btn btn--ghost"
                   onClick={() => dispatch({ type: "vote/cancel" })}>
             Wait, go back
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -681,10 +683,10 @@ function VoteAloud({ state, dispatch }) {
       </div>
       <div className="player-grid">
         {alive.map((p) => (
-          <button key={p.id} type="button" className="player-btn"
+          <Button key={p.id} type="button" className="player-btn"
                   onClick={() => dispatch({ type: "vote/propose", id: p.id })}>
             {p.name}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -718,10 +720,10 @@ function Ballot({ state, dispatch }) {
         </p>
         <p className="lede">Pass the phone to</p>
         <p className="who">{voter.name}</p>
-        <button type="button" className="btn btn--primary btn--tall" disabled={locked}
+        <Button type="button" className="btn btn--primary btn--tall" disabled={locked}
                 onClick={() => setHanded(true)}>
           I'm {voter.name}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -735,10 +737,10 @@ function Ballot({ state, dispatch }) {
       </div>
       <div className="player-grid">
         {candidates.map((p) => (
-          <button key={p.id} type="button" className="player-btn"
+          <Button key={p.id} type="button" className="player-btn"
                   onClick={() => dispatch({ type: "ballot/cast", id: p.id })}>
             {p.name}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -774,9 +776,9 @@ function ShakeGuess({ state, dispatch }) {
                autoCapitalize="none" autoCorrect="off" spellCheck="false"
                maxLength={40}
                onChange={(e) => setGuess(e.target.value)} />
-        <button type="submit" className="btn btn--primary btn--tall" disabled={!guess.trim()}>
+        <Button type="submit" className="btn btn--primary btn--tall" disabled={!guess.trim()}>
           Lock it in
-        </button>
+        </Button>
       </form>
     </div>
   );
@@ -834,10 +836,10 @@ function Elimination({ state, dispatch }) {
 
       <Standing state={state} />
 
-      <button type="button" className="btn btn--primary btn--tall"
+      <Button type="button" className="btn btn--primary btn--tall"
               onClick={() => dispatch({ type: "round/next" })}>
         Next round
-      </button>
+      </Button>
     </div>
   );
 }
@@ -891,14 +893,14 @@ function GameOver({ state, dispatch }) {
       </div>
 
       <div className="stack--tight stack">
-        <button type="button" className="btn btn--primary btn--tall"
+        <Button type="button" className="btn btn--primary btn--tall"
                 onClick={() => dispatch({ type: "game/again" })}>
           Again, same people
-        </button>
-        <button type="button" className="btn btn--ghost"
+        </Button>
+        <Button type="button" className="btn btn--ghost"
                 onClick={() => dispatch({ type: "game/reset" })}>
           Change the players
-        </button>
+        </Button>
       </div>
     </div>
   );

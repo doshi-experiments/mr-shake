@@ -7,6 +7,7 @@ const SHELL = [
   "index.html",
   "app.js",
   "app.css",
+  "fonts/hanken-grotesk.ttf",
   "manifest.webmanifest",
   "icon.svg",
   "favicon.png",

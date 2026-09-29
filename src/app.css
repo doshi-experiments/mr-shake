@@ -7,9 +7,8 @@
  *  the type is large, the targets are thumb-sized, and colour carries
  *  meaning rather than decoration.
  *
- *  The theme is real CSS custom properties. The calculator could not do
- *  that because Recharts refuses to resolve variables inside SVG
- *  presentation attributes; there are no charts here.
+ *  Shared semantic CSS properties theme the game. The calculator also
+ *  consumes concrete JavaScript values from the same source for charts.
  * ------------------------------------------------------------------ */
 
 :root {
