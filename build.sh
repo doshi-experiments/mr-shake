@@ -7,6 +7,7 @@ echo "Building $BUILD"
 
 rm -rf dist
 mkdir -p dist/fonts
+cp src/design-system/fonts/* dist/fonts/
 
 # 1. static shell
 cp src/static/index.html src/static/manifest.webmanifest src/static/_headers src/static/icon.svg dist/
@@ -29,9 +30,7 @@ done
 echo "  fonts: $(ls dist/fonts | wc -l | tr -d ' ')"
 
 # 4. app. No Tailwind here: the styling is a hand-written stylesheet of custom
-#    properties, which the calculator could not use because Recharts will not
-#    resolve CSS variables inside SVG presentation attributes. No charts, no
-#    constraint, one less build step.
+#    properties backed by the shared design package.
 VERSION=$(node -e "
 import {readFileSync} from 'fs';
 process.stdout.write(JSON.parse(readFileSync('package.json','utf8')).version);
@@ -40,7 +39,18 @@ npx esbuild --bundle src/main.jsx --outfile=dist/app.js \
   --jsx=automatic --minify --define:process.env.NODE_ENV='"production"' \
   --define:__APP_VERSION__='"'$VERSION'"' --define:__BUILD_STAMP__='"'$BUILD'"' \
   --log-level=warning
-cat src/fonts.css src/app.css > dist/app.css
+cat src/fonts.css node_modules/@doshi-experiments/design-system/dist/components.css src/app.css src/design-system/tokens.css src/design-system/legacy.css > dist/app.css
+
+# Retain notices for bundled runtime dependencies.
+node --input-type=module -e '
+import {readFileSync, existsSync, writeFileSync} from "node:fs";
+const packages = ["react", "react-dom", "scheduler", "@base-ui/react", "@base-ui/utils", "@floating-ui/react", "@floating-ui/react-dom", "@floating-ui/core", "@floating-ui/dom", "@floating-ui/utils", "tabbable", "use-sync-external-store"];
+const notices = packages.map(name => {
+  const file = ["LICENSE", "LICENSE.md", "LICENSE.txt"].map(f => "node_modules/" + name + "/" + f).find(existsSync);
+  return file ? name + "\n" + readFileSync(file, "utf8") : "";
+}).filter(Boolean).join("\n\n");
+writeFileSync("dist/THIRD-PARTY-NOTICES.txt", notices);
+'
 
 # 5. service worker, stamped so returning visitors pick up the new version
 sed "s/__BUILD__/$BUILD/" src/sw.template.js > dist/sw.js

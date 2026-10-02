@@ -7,9 +7,8 @@
  *  the type is large, the targets are thumb-sized, and colour carries
  *  meaning rather than decoration.
  *
- *  The theme is real CSS custom properties. The calculator could not do
- *  that because Recharts refuses to resolve variables inside SVG
- *  presentation attributes; there are no charts here.
+ *  Shared semantic CSS properties theme the game. The calculator also
+ *  consumes concrete JavaScript values from the same source for charts.
  * ------------------------------------------------------------------ */
 
 :root {
@@ -256,33 +255,7 @@ h2.subtitle {
 .field { display: flex; flex-direction: column; gap: 0.375rem; }
 .label { font-size: 0.8125rem; color: var(--mute); }
 
-.stepper { display: flex; align-items: center; gap: 0.75rem; }
-.stepper__btn {
-  appearance: none;
-  width: 52px; height: 52px;
-  flex: 0 0 52px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-  color: var(--ink);
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.stepper__btn:disabled { opacity: 0.35; pointer-events: none; }
-.stepper__btn:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
-.stepper__value {
-  flex: 1;
-  text-align: center;
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-.stepper__value small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--mute); font-family: inherit; }
-
-.roles { display: grid; gap: 0.625rem; }
+.roles { display:grid; gap:0.625rem; }
 .role-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -605,3 +578,5 @@ h2.subtitle {
   text-align: center;
 }
 .rename__input:focus-visible { outline: 3px solid var(--shake); outline-offset: 1px; }
+
+@media (max-width:380px) { .role-row {grid-template-columns:minmax(0,1fr); gap:12px} .role-row > .ds-stepper {margin-left:auto} }
