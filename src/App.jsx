@@ -1,4 +1,4 @@
-import { Button } from "@doshi-experiments/design-system/react";
+import { Button, NumberStepper } from "@doshi-experiments/design-system/react";
 import { resolveTokens } from "./design-system/tokens.js";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
@@ -151,16 +151,8 @@ function Stepper({ label, value, min, max, onChange, suffix }) {
   return (
     <div className="field">
       <span className="label">{label}</span>
-      <div className="stepper">
-        <Button className="stepper__btn" type="button" aria-label={"Fewer " + label.toLowerCase()}
-                disabled={value <= min} onClick={() => onChange(value - 1)}>−</Button>
-        <span className="stepper__value" aria-live="polite">
-          {value}
-          {suffix && <small>{suffix}</small>}
-        </span>
-        <Button className="stepper__btn" type="button" aria-label={"More " + label.toLowerCase()}
-                disabled={value >= max} onClick={() => onChange(value + 1)}>+</Button>
-      </div>
+      <NumberStepper label={label} value={value} min={min} max={max} onValueChange={onChange} suffix={suffix}
+        decreaseLabel={"Fewer " + label.toLowerCase()} increaseLabel={"More " + label.toLowerCase()} />
     </div>
   );
 }
@@ -173,13 +165,8 @@ function RoleRow({ kind, name, note, count, min, max, onChange }) {
         <div className="role-row__note">{note}</div>
       </div>
       {onChange ? (
-        <div className="stepper" style={{ gap: "0.375rem" }}>
-          <Button className="stepper__btn" type="button" aria-label={"Fewer " + name}
-                  disabled={count <= min} onClick={() => onChange(count - 1)}>−</Button>
-          <span className="role-row__count">{count}</span>
-          <Button className="stepper__btn" type="button" aria-label={"More " + name}
-                  disabled={count >= max} onClick={() => onChange(count + 1)}>+</Button>
-        </div>
+        <NumberStepper label={name} value={count} min={min} max={max} onValueChange={onChange}
+          decreaseLabel={"Fewer " + name} increaseLabel={"More " + name} />
       ) : (
         <span className="role-row__count">{count}</span>
       )}
@@ -217,7 +204,7 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
         onClick={onToggleTheme}
       >
         <span className="switch__track">
-          <span className="switch__dot">{theme === "light" ? "☀" : "☾"}</span>
+          <span className="switch__dot" aria-hidden="true" />
         </span>
       </Button>
     </header>
