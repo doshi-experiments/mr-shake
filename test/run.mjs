@@ -440,6 +440,19 @@ head("The reveal loop cannot skip a player");
 }
 
 /* ------------------------------------------------------------------ */
+head("Private reveals are concealed when leaving");
+{
+  const rng = mulberry32(41);
+  const setup = initialState();
+  const started = reduce(setup, {type: "game/start"}, rng);
+  const shown = reduce(reduce(started, {type: "reveal/accept"}, rng), {type: "reveal/show"}, rng);
+  const concealed = reduce(shown, {type: "reveal/conceal"}, rng);
+  ok("concealing a word returns to the hand-over gate", concealed.revealStage === "pass");
+  ok("concealing leaves the same player and dealt words intact",
+    concealed.revealIndex === shown.revealIndex && concealed.players === shown.players && concealed.pair === shown.pair);
+  ok("concealing outside a private reveal leaves gameplay intact", reduce(setup, {type: "reveal/conceal"}, rng) === setup);
+}
+
 head("Full games — 500 seeded playthroughs, voting aloud");
 {
   let bad = null;

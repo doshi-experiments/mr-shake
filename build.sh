@@ -6,8 +6,9 @@ BUILD=$(date -u +%Y%m%d%H%M%S)
 echo "Building $BUILD"
 
 rm -rf dist
-mkdir -p dist/fonts
+mkdir -p dist/fonts dist/design-system
 cp src/design-system/fonts/* dist/fonts/
+cp src/design-system/prepaint.js dist/design-system/prepaint.js
 
 # 1. static shell
 cp src/static/index.html src/static/manifest.webmanifest src/static/_headers src/static/icon.svg dist/
@@ -20,15 +21,6 @@ for (const [name,b64] of Object.entries(icons)) writeFileSync('dist/'+name, Buff
 console.log('  icons: '+Object.keys(icons).length);
 "
 
-# 3. fonts, straight from the IBM Plex packages
-for fam in Sans Mono Serif; do
-  for w in Regular Medium SemiBold; do
-    src=$(find node_modules/@ibm/plex-$(echo $fam | tr 'A-Z' 'a-z') -name "IBMPlex${fam}-${w}-Latin1.woff2" 2>/dev/null | head -1)
-    if [ -n "$src" ]; then cp "$src" "dist/fonts/IBMPlex${fam}-${w}.woff2"; else echo "  !! missing IBMPlex${fam}-${w}"; fi
-  done
-done
-echo "  fonts: $(ls dist/fonts | wc -l | tr -d ' ')"
-
 # 4. app. No Tailwind here: the styling is a hand-written stylesheet of custom
 #    properties backed by the shared design package.
 VERSION=$(node -e "
@@ -39,7 +31,7 @@ npx esbuild --bundle src/main.jsx --outfile=dist/app.js \
   --jsx=automatic --minify --define:process.env.NODE_ENV='"production"' \
   --define:__APP_VERSION__='"'$VERSION'"' --define:__BUILD_STAMP__='"'$BUILD'"' \
   --log-level=warning
-cat src/fonts.css node_modules/@doshi-experiments/design-system/dist/components.css src/app.css src/design-system/tokens.css src/design-system/legacy.css > dist/app.css
+cat src/design-system/tokens.css node_modules/@doshi-experiments/design-system/dist/components.css src/design-system/legacy.css src/app.css > dist/app.css
 
 # Retain notices for bundled runtime dependencies.
 node --input-type=module -e '

@@ -1,13 +1,13 @@
 {
   "name": "Mr. Shake — a party game for one phone",
   "short_name": "Mr. Shake",
-  "description": "A pass-and-play social deduction game. Everyone gets the same word except the ones who don't. Three to twenty players, one phone, no accounts and no signal required.",
+  "description": "Everyone gets the same word. Kind of. A party game for 3–20 people and one phone.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#E7E9E3",
-  "theme_color": "#E7E9E3",
+  "background_color": "#F1F5F7",
+  "theme_color": "#F1F5F7",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },

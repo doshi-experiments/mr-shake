@@ -1,63 +1,11 @@
-/* ------------------------------------------------------------------ *
- *  Mr. Shake
- *
- *  Same family as the two drawing sheets and the calculator — IBM Plex,
- *  the same paper and blueprint grounds, the same `sheet-theme` cookie —
- *  but at game scale. This is read across a table at arm's length, so
- *  the type is large, the targets are thumb-sized, and colour carries
- *  meaning rather than decoration.
- *
- *  Shared semantic CSS properties theme the game. The calculator also
- *  consumes concrete JavaScript values from the same source for charts.
- * ------------------------------------------------------------------ */
+/* Mr. Shake: common identity at a phone-friendly game scale. */
 
 :root {
-  --paper: #E7E9E3;
-  --card: #FBFBF8;
-  --card-alt: #F1F2ED;
-  --ink: #15181A;
-  --mute: #6C7370;
-  --line: #D2D6CE;
-
-  /* Role colours, lifted from the calculator's token set so the family
-     reads as one body of work. */
-  --civilian: #0F5C52;
-  --civilian-soft: #A9C6BF;
-  --civilian-wash: #E4EEEB;
-  --undercover: #8C2F5E;
-  --undercover-soft: #D9AEC1;
-  --undercover-wash: #F6E9EE;
-  --shake: #B07D06;
-  --shake-soft: #E8D08A;
-  --shake-wash: #F7F0DC;
-  --on-accent: #FFFFFF;
-
-  --radius: 14px;
-  --tap: 60px;                     /* never smaller than this */
-  --shell: 30rem;
-
+  --radius: var(--ds-radius-container);
+  --tap: 60px;
+  --shell: 34rem;
   font-synthesis-weight: none;
   -webkit-text-size-adjust: 100%;
-}
-
-:root[data-theme="dark"] {
-  --paper: #0E1C2B;
-  --card: #14273A;
-  --card-alt: #1A2F44;
-  --ink: #E8F0F7;
-  --mute: #93AABF;
-  --line: #2A4258;
-
-  --civilian: #5CC0AE;
-  --civilian-soft: #2E6A61;
-  --civilian-wash: #12302C;
-  --undercover: #E68AB4;
-  --undercover-soft: #7A3355;
-  --undercover-wash: #2A1B25;
-  --shake: #E8BC3E;
-  --shake-soft: #6B5410;
-  --shake-wash: #2A2413;
-  --on-accent: #0E1C2B;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -66,16 +14,14 @@ html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--ms-bg, #E7E9E3);
+  background: var(--ds-surface-page);
 }
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  /* A party game gets passed around and tapped fast; text selection just
-     produces blue smears and long-press menus. Inputs opt back in. */
-  -webkit-user-select: none;
-  user-select: none;
+  font-family: var(--ds-font-body);
+  font-size: 1rem;
+  line-height: 1.55;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
@@ -93,21 +39,10 @@ input, textarea { -webkit-user-select: text; user-select: text; }
            max(1rem, env(safe-area-inset-bottom)) 1rem;
 }
 
-.chrome {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--line);
-  flex: 0 0 auto;
-}
-.sheet-no {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.04em;
-  color: var(--mute);
-}
-.chrome-spacer { flex: 1; }
+.game-controls {display:flex; align-items:center; justify-content:flex-end; gap:1rem; min-height:64px; padding:12px 0}
+.game-rules {margin-top:12px}
+.game-rules p {max-width:64ch; margin:0 0 12px; font-size:.9375rem}
+.app > .ds-site-header {margin-bottom:8px; padding-inline:0}
 
 .stage {
   flex: 1 1 auto;
@@ -116,13 +51,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   justify-content: center;
   padding: 1.25rem 0;
   gap: 1rem;
-  /* Every screen swap is a new hand of information; a short fade stops
-     it feeling like the page broke. */
-  animation: rise 0.22s ease-out;
-}
-@keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
 }
 .stage--scroll { justify-content: flex-start; overflow-y: auto; }
 
@@ -133,36 +61,39 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* ---------------- type ---------------- */
 
 .eyebrow {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--ds-font-body);
   font-size: 0.6875rem;
-  letter-spacing: 0.04em;
+  letter-spacing: normal;
   color: var(--mute);
   margin: 0;
 }
 h1.title {
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
-  font-size: clamp(1.75rem, 8vw, 2.5rem);
+  font-size: clamp(1.9375rem, 7.5vw, 3.0625rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin: 0;
 }
 h2.subtitle {
-  font-family: 'IBM Plex Serif', Georgia, serif;
-  font-weight: 500;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
+  font-weight: 600;
   font-size: 1.3125rem;
   line-height: 1.2;
   margin: 0;
 }
 .lede { font-size: 0.9375rem; line-height: 1.5; color: var(--mute); margin: 0; }
 .fine { font-size: 0.8125rem; line-height: 1.45; color: var(--mute); margin: 0; }
-.mono { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; }
+.mono { font-family: var(--ds-font-body); }
 
 /* The name of whoever is holding the phone. Deliberately enormous —
    this is the one thing that has to be readable when someone glances at
    a phone being held out to them. */
 .who {
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2.25rem, 13vw, 3.75rem);
   line-height: 1.05;
@@ -188,14 +119,14 @@ h2.subtitle {
   color: var(--ink);
   font-family: inherit;
   font-size: 1.0625rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
   transition: transform 0.08s ease, opacity 0.15s ease, background-color 0.15s ease;
   text-align: center;
 }
 .btn:active { transform: scale(0.985); }
-.btn:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
 .btn--primary { background: var(--civilian); border-color: var(--civilian); color: var(--on-accent); font-weight: 600; }
 .btn--danger  { background: var(--undercover); border-color: var(--undercover); color: var(--on-accent); font-weight: 600; }
@@ -222,6 +153,8 @@ h2.subtitle {
 
 /* The word itself. This is the whole product in one element. */
 .word-card {
+  -webkit-user-select: none;
+  user-select: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -242,7 +175,8 @@ h2.subtitle {
 .word-card--word { border-color: var(--civilian-soft); background: var(--civilian-wash); }
 .word-card--shake { border-color: var(--shake-soft); background: var(--shake-wash); }
 .word {
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2rem, 11vw, 3.25rem);
   line-height: 1.05;
@@ -273,7 +207,7 @@ h2.subtitle {
 .role-row__name { font-weight: 600; font-size: 0.9375rem; }
 .role-row__note { font-size: 0.75rem; color: var(--mute); line-height: 1.35; }
 .role-row__count {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--ds-font-body);
   font-size: 1.375rem;
   font-weight: 600;
   min-width: 1.5rem;
@@ -293,7 +227,7 @@ h2.subtitle {
   background: var(--card);
 }
 .name-field__n {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--ds-font-body);
   font-size: 0.75rem;
   color: var(--mute);
   flex: 0 0 auto;
@@ -304,7 +238,7 @@ h2.subtitle {
 .name-field .name-input:focus-visible { outline: none; }
 .name-input {
   width: 100%;
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0.625rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -313,23 +247,23 @@ h2.subtitle {
   font-family: inherit;
   font-size: 1rem;
 }
-.name-input:focus-visible { outline: 3px solid var(--shake); outline-offset: 1px; }
+.name-input:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 1px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4375rem; }
 .chip {
   appearance: none;
-  min-height: 40px;
+  min-height: var(--tap);
   padding: 0.4375rem 0.75rem;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--ds-radius-control);
   background: transparent;
   color: var(--mute);
   font-family: inherit;
   font-size: 0.8125rem;
   cursor: pointer;
 }
-.chip[aria-pressed="true"] { background: var(--civilian); border-color: var(--civilian); color: var(--on-accent); font-weight: 500; }
-.chip:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.chip[aria-pressed="true"] { background: var(--ds-action-primary); border-color: var(--ds-action-primary); color: var(--ds-action-text); font-weight: 600; }
+.chip:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
 .segmented { display: flex; gap: 0.375rem; }
 .segmented .chip { flex: 1; justify-content: center; text-align: center; border-radius: 10px; }
@@ -358,11 +292,11 @@ h2.subtitle {
   color: var(--ink);
   font-family: inherit;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   overflow-wrap: anywhere;
 }
-.player-btn:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.player-btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 .player-btn[aria-pressed="true"] { background: var(--undercover); border-color: var(--undercover); color: var(--on-accent); }
 .player-btn:disabled { opacity: 0.4; pointer-events: none; }
 
@@ -372,7 +306,7 @@ h2.subtitle {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 0.75rem;
-  min-height: 52px;
+  min-height: var(--tap);
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -385,7 +319,7 @@ h2.subtitle {
   color: var(--ink);
 }
 .order-item__n {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--ds-font-body);
   font-size: 0.8125rem;
   color: var(--mute);
   width: 1.25rem;
@@ -393,7 +327,7 @@ h2.subtitle {
 .order-item[aria-pressed="true"] { background: var(--card-alt); color: var(--mute); }
 .order-item[aria-pressed="true"] .order-item__name { text-decoration: line-through; }
 .order-item__tick { color: var(--civilian); font-size: 1rem; }
-.order-item:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.order-item:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
 /* The row is two separate controls: the name toggles "has spoken", the
    eye hands the phone back. They cannot be nested — a button inside a
@@ -403,8 +337,8 @@ h2.subtitle {
 .order-row .order-item { flex: 1 1 auto; min-width: 0; }
 .order-peek {
   flex: 0 0 auto;
-  width: 52px;
-  min-height: 52px;
+  width: var(--tap);
+  min-height: var(--tap);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -415,7 +349,7 @@ h2.subtitle {
   cursor: pointer;
   font-family: inherit;
 }
-.order-peek:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.order-peek:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 .order-peek:active { background: var(--card-alt); }
 .order-peek .icon { width: 22px; height: 22px; display: block; }
 
@@ -426,7 +360,8 @@ h2.subtitle {
 .verdict--impostors .verdict__who { color: var(--undercover); }
 .verdict--mrshake .verdict__who { color: var(--shake); }
 .verdict__who {
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2rem, 10vw, 3rem);
   line-height: 1.05;
@@ -451,13 +386,14 @@ h2.subtitle {
 .roster-row--out { opacity: 0.55; }
 .roster-row__role { font-size: 0.75rem; color: var(--mute); }
 .roster-row__word {
-  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-family: var(--ds-font-body);
   font-size: 0.8125rem;
   color: var(--mute);
 }
 
 .pair-line { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
-.pair-word { font-family: 'IBM Plex Serif', Georgia, serif; font-size: 1.25rem; font-weight: 600; }
+.pair-word { font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0; font-size: 1.25rem; font-weight: 600; }
 .pair-word--civilian { color: var(--civilian); }
 .pair-word--undercover { color: var(--undercover); }
 
@@ -473,51 +409,13 @@ h2.subtitle {
   border-radius: var(--radius);
   background: var(--card);
   color: var(--ink);
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-size: 1.375rem;
   font-weight: 600;
   text-align: center;
 }
-.guess-input:focus-visible { outline: 3px solid var(--shake); outline-offset: 1px; }
-
-/* ---------------- theme switch ---------------- */
-
-/* The pill is 26px, but the button around it is a full 44 so it is
-   actually hittable with a thumb. */
-.switch {
-  appearance: none;
-  display: grid;
-  place-items: center;
-  width: 48px; height: 44px;
-  flex: 0 0 48px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-.switch__track {
-  display: flex;
-  align-items: center;
-  width: 48px; height: 26px;
-  padding: 2px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--card);
-}
-.switch__dot {
-  display: grid;
-  place-items: center;
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  background: var(--civilian);
-  color: var(--on-accent);
-  font-size: 11px;
-  line-height: 1;
-  transform: translateX(0);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-:root[data-theme="light"] .switch__dot { transform: translateX(22px); }
-.switch:focus-visible { outline: 3px solid var(--shake); outline-offset: 2px; }
+.guess-input:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 1px; }
 
 /* ---------------- misc ---------------- */
 
@@ -572,11 +470,21 @@ h2.subtitle {
   border-radius: var(--radius);
   background: var(--card);
   color: var(--ink);
-  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-family: var(--ds-font-display);
+  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-size: 1.75rem;
   font-weight: 600;
   text-align: center;
 }
-.rename__input:focus-visible { outline: 3px solid var(--shake); outline-offset: 1px; }
+.rename__input:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 1px; }
 
 @media (max-width:380px) { .role-row {grid-template-columns:minmax(0,1fr); gap:12px} .role-row > .ds-stepper {margin-left:auto} }
+
+.role-row__count, .name-field__n, .order-item__n {font-variant-numeric:tabular-nums}
+.role-row {border-radius:0; background:transparent; border-width:0 0 1px; padding:14px 0}
+.role-row__note {font-size:.8125rem; line-height:1.55}
+.name-field, .name-input, .player-btn, .order-item, .order-peek, .rename__input, .segmented .chip {border-radius:var(--ds-radius-control)}
+.btn {border-radius:var(--ds-radius-control)}
+.word-card {border-radius:var(--ds-radius-container)}
+.title, .subtitle, .who, .word, .verdict__who {font-weight:700}
+.footer {padding:12px 0; text-align:left}

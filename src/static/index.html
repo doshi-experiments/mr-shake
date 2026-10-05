@@ -4,30 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mr. Shake — a party game for one phone</title>
-<meta name="description" content="A pass-and-play social deduction game. Everyone gets the same word except the ones who don't. Three to twenty players, one phone, no accounts and no signal required.">
-<meta name="theme-color" content="#E7E9E3">
+<meta name="description" content="Everyone gets the same word. Kind of. A party game for 3–20 people and one phone. No accounts needed.">
+<meta name="theme-color" content="#F1F5F7">
 <meta name="color-scheme" content="light dark">
-<!-- Theme is resolved before first paint, from a cookie scoped to
-     .rishabhdoshi.com so the choice carries over from the portfolio
-     and the experiments index. app.js is deferred, so without this the
-     dark-mode visitor gets a flash of the light shell on every load. -->
-<script>
-(function(){
-  var m=document.cookie.match(/(?:^|;\s*)sheet-theme=(light|dark)/),t=m&&m[1];
-  if(!t){ try{ t=localStorage.getItem('sheet-theme'); }catch(e){} }
-  if(t!=='light'&&t!=='dark')
-    t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
-  var bg=t==='dark'?'#131521':'#f6f7fb';
-  var r=document.documentElement;
-  r.setAttribute('data-theme',t);
-  r.style.setProperty('--ms-bg',bg);
-  r.style.colorScheme=t;
-  document.addEventListener('DOMContentLoaded',function(){
-    var mt=document.querySelector('meta[name="theme-color"]');
-    if(mt)mt.setAttribute('content',bg);
-  });
-})();
-</script>
+<script src="/design-system/prepaint.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.png" sizes="32x32">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -35,8 +15,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mr. Shake">
-<link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/IBMPlexSerif-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/commissioner-variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
