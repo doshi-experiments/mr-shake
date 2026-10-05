@@ -1,5 +1,5 @@
-import { Button, NumberStepper } from "@doshi-experiments/design-system/react";
-import { resolveTokens } from "./design-system/tokens.js";
+import { Button, NumberStepper, SiteHeader, Disclosure } from "@doshi-experiments/design-system/react";
+import { createAppearanceController } from "@doshi-experiments/design-system/theme";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   CIVILIAN, UNDERCOVER, MRSHAKE, ROLE_LABEL,
@@ -8,37 +8,7 @@ import {
 } from "./game.js";
 import { packFor, normalizePack, PACKS, PACK_IDS } from "./words.js";
 
-/* ------------------------------------------------------------------ *
- *  Theme — the same cookie the portfolio and the experiments index
- *  write, scoped to the registrable domain so a choice made on any one
- *  of the three carries to the others.
- * ------------------------------------------------------------------ */
-
-function readTheme() {
-  const m = document.cookie.match(/(?:^|;\s*)sheet-theme=(light|dark)/);
-  let t = m && m[1];
-  if (!t) { try { t = localStorage.getItem("sheet-theme"); } catch (e) {} }
-  if (t !== "light" && t !== "dark")
-    t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-  return t;
-}
-function writeTheme(t) {
-  try {
-    document.cookie = "sheet-theme=" + t + ";domain=.rishabhdoshi.com;path=/;" +
-                      "max-age=31536000;samesite=lax";
-    document.cookie = "sheet-theme=" + t + ";path=/;max-age=31536000;samesite=lax";
-    localStorage.setItem("sheet-theme", t);
-  } catch (e) {}
-}
-function applyTheme(t) {
-  const root = document.documentElement;
-  root.setAttribute("data-theme", t);
-  root.style.colorScheme = t;
-  const bg = resolveTokens({project: "game", appearance: t})["surface-page"];
-  root.style.setProperty("--ms-bg", bg);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", bg);
-}
+const appearanceController = createAppearanceController({root: document.documentElement});
 
 /* ------------------------------------------------------------------ *
  *  Hooks
@@ -80,7 +50,8 @@ function useGame() {
         const parsed = JSON.parse(saved);
         // Guard against a shape from an older build.
         if (parsed && typeof parsed.phase === "string" && parsed.setup) {
-          return { ...base, ...parsed, setup: migrateSetup(parsed.setup) };
+          return { ...base, ...parsed, setup: migrateSetup(parsed.setup),
+            ...(parsed.phase === "reveal" ? {revealStage: "pass"} : {}) };
         }
       }
     } catch (e) {}
@@ -99,6 +70,30 @@ function useGame() {
   useEffect(() => {
     try { localStorage.setItem(SETUP_KEY, JSON.stringify(state.setup)); } catch (e) {}
   }, [state.setup]);
+
+  // Leaving the tab never leaves a private word visible on return. Save the
+  // concealed snapshot synchronously: pagehide can run before React's effect.
+  const latestState = useRef(state);
+  latestState.current = state;
+  useEffect(() => {
+    const conceal = () => {
+      const current = latestState.current;
+      if (current.phase !== "reveal") return;
+      const safe = {...current, revealStage: "pass"};
+      latestState.current = safe;
+      try { sessionStorage.setItem(SAVE_KEY, JSON.stringify(safe)); } catch (e) {}
+      rawDispatch({type: "reveal/conceal"});
+    };
+    const onVisibility = () => { if (document.visibilityState === "hidden") conceal(); };
+    window.addEventListener("pagehide", conceal);
+    window.addEventListener("blur", conceal);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", conceal);
+      window.removeEventListener("blur", conceal);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   const dispatch = useCallback((action) => rawDispatch(action), []);
   return [state, dispatch];
@@ -174,7 +169,7 @@ function RoleRow({ kind, name, note, count, min, max, onChange }) {
   );
 }
 
-function Chrome({ theme, onToggleTheme, onReset, canReset }) {
+function Chrome({ onReset, canReset }) {
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     if (!confirming) return;
@@ -182,32 +177,14 @@ function Chrome({ theme, onToggleTheme, onReset, canReset }) {
     return () => clearTimeout(id);
   }, [confirming]);
 
+  if (!canReset) return null;
   return (
-    <header className="chrome">
-      <span className="sheet-no">E-04.1 · Mr. Shake</span>
-      <span className="chrome-spacer" />
-      {canReset && (
-        <Button
-          type="button"
-          className={"btn btn--small " + (confirming ? "btn--danger" : "btn--ghost")}
-          onClick={() => (confirming ? onReset() : setConfirming(true))}
-        >
-          {confirming ? "End the game?" : "End game"}
-        </Button>
-      )}
-      <Button
-        type="button"
-        className="switch"
-        role="switch"
-        aria-checked={theme === "light"}
-        aria-label={theme === "light" ? "Switch to the dark sheet" : "Switch to the light sheet"}
-        onClick={onToggleTheme}
-      >
-        <span className="switch__track">
-          <span className="switch__dot" aria-hidden="true" />
-        </span>
+    <div className="game-controls">
+      <Button type="button" className={"btn btn--small " + (confirming ? "btn--danger" : "btn--ghost")}
+        onClick={() => (confirming ? onReset() : setConfirming(true))}>
+        {confirming ? "Confirm end game" : "End game"}
       </Button>
-    </header>
+    </div>
   );
 }
 
@@ -229,12 +206,12 @@ function Setup({ state, dispatch }) {
   return (
     <div className="stage stage--scroll stack--loose">
       <div className="stack--tight stack">
-        <p className="eyebrow">A party game for one phone</p>
-        <h1 className="title">Everyone gets the same word.<br />Except the ones who don't.</h1>
-        <p className="lede">
-          Pass the phone round, take your word, then describe it one at a time
-          without saying it. Find the impostors before they outnumber you.
-        </p>
+        <h1 className="title">Everyone gets the same word.<br />Kind of</h1>
+        <Disclosure title="How to play" className="game-rules">
+          <p>Pass the phone. Read your word in private. Give a clue without saying it, then vote out a suspect.</p>
+          <p>Civilians share a word. Undercovers get a similar one. Mr. Shake gets nothing. Confidence will have to do.</p>
+          <p>Find the impostors before they outnumber you. A caught Mr. Shake can still win by guessing the word.</p>
+        </Disclosure>
       </div>
 
       <Stepper label="Players" value={s.players} min={MIN_PLAYERS} max={MAX_PLAYERS}
@@ -261,8 +238,7 @@ function Setup({ state, dispatch }) {
           ))}
         </div>
         <p className="fine">
-          Blanks stay as Player 1, Player 2 and so on. Names are remembered for
-          next time, and anyone can fix theirs when the phone reaches them.
+          Leave names blank to use “Player 1,” “Player 2,” and so on.
         </p>
       </div>
 
@@ -270,15 +246,15 @@ function Setup({ state, dispatch }) {
         <span className="label">Who they are</span>
         <div className="roles">
           <RoleRow kind="civilian" name="Civilians" count={s.civilians}
-                   note="Get the word. Find everyone who doesn't have it." />
+                   note="Same word. Find the impostors." />
           <RoleRow kind="undercover" name="Undercovers" count={s.undercovers}
-                   note="Get a word that is close, but not the same one."
+                   note="Similar word. Blend in."
                    min={0} max={Math.max(0, maxImpostors - s.mrShakes)}
                    onChange={(v) => patch({ undercovers: v })} />
           <RoleRow kind="shake" name="Mr. Shake" count={s.mrShakes}
                    note={s.players < MIN_PLAYERS_FOR_MRSHAKE
                      ? "Needs " + MIN_PLAYERS_FOR_MRSHAKE + " players or more."
-                     : "Gets no word at all. Bluff, work it out, and name it if caught."}
+                     : "No word. Bluff, then guess if caught."}
                    min={0}
                    max={s.players < MIN_PLAYERS_FOR_MRSHAKE ? 0 : Math.max(0, maxImpostors - s.undercovers)}
                    onChange={(v) => patch({ mrShakes: v })} />
@@ -305,8 +281,8 @@ function Setup({ state, dispatch }) {
         </div>
         <p className="fine">
           {s.voteMode === "aloud"
-            ? "Argue it out, then tap whoever the group picked. Fastest, and the part people enjoy."
-            : "The phone goes round again each round and everyone votes in private. Slower, but nobody knows who voted for them."}
+            ? "Discuss, then choose someone together."
+            : "Pass the phone to vote in private."}
         </p>
       </div>
 
@@ -471,8 +447,7 @@ function Reveal({ state, dispatch }) {
         <div className="word-card word-card--shake">
           <span className="word">You're Mr. Shake</span>
           <span className="fine">
-            You have no word. Listen to the others, work out what it is, and
-            describe it as if you knew all along.
+            No word. Listen closely and sound like you knew all along.
           </span>
         </div>
       ) : (
@@ -520,6 +495,18 @@ function PeekWord({ player, onDone }) {
   const [stage, setStage] = useState("pass");
   const locked = useLockout([stage]);
   const card = revealFor(player);
+  useEffect(() => {
+    const conceal = () => setStage("pass");
+    const onVisibility = () => { if (document.visibilityState === "hidden") conceal(); };
+    window.addEventListener("pagehide", conceal);
+    window.addEventListener("blur", conceal);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", conceal);
+      window.removeEventListener("blur", conceal);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   if (stage === "pass") {
     return (
@@ -594,9 +581,7 @@ function Describe({ state, dispatch }) {
         <p className="eyebrow">Round {state.round}</p>
         <h2 className="subtitle">Describe your word, one at a time</h2>
         <p className="lede">
-          One word or a short phrase each — never the word itself. Tap a name
-          once they have gone, so you can pick up where you left off. The eye
-          hands the phone back to someone who has forgotten theirs.
+          Give a short clue without saying the word. Tap names as people finish; use the eye for a private reminder.
         </p>
       </div>
 
@@ -816,8 +801,8 @@ function Elimination({ state, dispatch }) {
       ) : (
         <div className="stack--tight stack">
           <p className="eyebrow">Round {state.round}</p>
-          <h2 className="subtitle">Nobody went home</h2>
-          <p className="lede">The vote tied twice, so everyone stays in for another round.</p>
+          <h2 className="subtitle">Nobody is out</h2>
+          <p className="lede">Two tied votes. Suspicion survives another round.</p>
         </div>
       )}
 
@@ -851,6 +836,7 @@ function GameOver({ state, dispatch }) {
       <div className={"verdict verdict--" + state.winner}>
         <p className="eyebrow">After {state.round} {state.round === 1 ? "round" : "rounds"}</p>
         <p className="verdict__who">{headline}</p>
+        <p className="lede">{state.winner === "civilians" ? "Suspicion paid off." : state.winner === "mrshake" ? "No word. Plenty of nerve." : "Very convincing. Very wrong."}</p>
         <p className="fine">{state.winNote}</p>
       </div>
 
@@ -882,11 +868,11 @@ function GameOver({ state, dispatch }) {
       <div className="stack--tight stack">
         <Button type="button" className="btn btn--primary btn--tall"
                 onClick={() => dispatch({ type: "game/again" })}>
-          Again, same people
+          Play again
         </Button>
         <Button type="button" className="btn btn--ghost"
                 onClick={() => dispatch({ type: "game/reset" })}>
-          Change the players
+          Change players
         </Button>
       </div>
     </div>
@@ -899,16 +885,11 @@ function GameOver({ state, dispatch }) {
 
 export default function App() {
   const [state, dispatch] = useGame();
-  const [theme, setTheme] = useState(readTheme);
-
-  useEffect(() => { applyTheme(theme); }, [theme]);
+  const [appearance, setAppearance] = useState(() => ({
+    preference: appearanceController.getPreference(), appearance: appearanceController.getAppearance(),
+  }));
+  useEffect(() => appearanceController.subscribe(setAppearance), []);
   useWakeLock(state.phase !== "setup" && state.phase !== "gameover");
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    writeTheme(next);
-    setTheme(next);
-  };
 
   const screen = () => {
     switch (state.phase) {
@@ -925,9 +906,9 @@ export default function App() {
 
   return (
     <div className="app" data-phase={state.phase}>
+      <SiteHeader project="game" appearance={appearance.preference}
+        onAppearanceChange={(value) => appearanceController.setPreference(value)} />
       <Chrome
-        theme={theme}
-        onToggleTheme={toggleTheme}
         canReset={state.phase !== "setup"}
         onReset={() => dispatch({ type: "game/reset" })}
       />
@@ -938,10 +919,7 @@ export default function App() {
         {screen()}
       </main>
       <footer className="footer">
-        <p className="eyebrow center">
-          {typeof __APP_VERSION__ !== "undefined" ? "v" + __APP_VERSION__ : "dev"}
-          {" · "}rishabhdoshi.com
-        </p>
+        <p className="fine">One phone. A few suspicious friends.</p>
       </footer>
     </div>
   );

@@ -439,6 +439,9 @@ export function reduce(state, action, rng = Math.random) {
      * step rather than the hide. A tap that slips through on hide can
      * therefore only ever land you back on the pass screen for the same
      * player — it can never skip anybody. */
+    case "reveal/conceal":
+      return state.phase === "reveal" && state.revealStage !== "pass"
+        ? {...state, revealStage: "pass"} : state;
     case "reveal/accept":                       // "I'm Ava" → card, face down
       return state.revealStage === "pass" ? { ...state, revealStage: "hidden" } : state;
     case "reveal/show":
