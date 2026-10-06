@@ -125,7 +125,7 @@ h2.subtitle {
   transition: transform 0.08s ease, opacity 0.15s ease, background-color 0.15s ease;
   text-align: center;
 }
-.btn:active { transform: scale(0.985); }
+.btn:active { transform: scale(0.96); }
 .btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
 .btn--primary { background: var(--civilian); border-color: var(--civilian); color: var(--on-accent); font-weight: 600; }
