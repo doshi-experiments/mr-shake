@@ -42,7 +42,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .game-controls {display:flex; align-items:center; justify-content:flex-end; gap:1rem; min-height:64px; padding:12px 0}
 .game-rules {margin-top:12px}
 .game-rules p {max-width:64ch; margin:0 0 12px; font-size:.9375rem}
-.app > .ds-site-header {margin-bottom:8px; padding-inline:0}
+.app > .ds-site-header {margin-bottom:8px; width:100%; max-width:none}
 
 .stage {
   flex: 1 1 auto;
@@ -222,9 +222,10 @@ h2.subtitle {
   align-items: center;
   gap: 0.5rem;
   padding-left: 0.625rem;
-  border: 1px solid var(--line);
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: var(--card);
+  background: var(--ds-surface-inset);
+  box-shadow: var(--ds-shadow-pressed);
 }
 .name-field__n {
   font-family: var(--ds-font-body);
@@ -233,7 +234,7 @@ h2.subtitle {
   flex: 0 0 auto;
   min-width: 0.75rem;
 }
-.name-field:focus-within { border-color: var(--civilian); }
+.name-field:focus-within { border-color: var(--civilian); outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 .name-field .name-input { border: none; background: transparent; padding-left: 0; }
 .name-field .name-input:focus-visible { outline: none; }
 .name-input {
@@ -483,8 +484,17 @@ h2.subtitle {
 .role-row__count, .name-field__n, .order-item__n {font-variant-numeric:tabular-nums}
 .role-row {border-radius:0; background:transparent; border-width:0 0 1px; padding:14px 0}
 .role-row__note {font-size:.8125rem; line-height:1.55}
-.name-field, .name-input, .player-btn, .order-item, .order-peek, .rename__input, .segmented .chip {border-radius:var(--ds-radius-control)}
-.btn {border-radius:var(--ds-radius-control)}
+.name-field, .name-input, .player-btn, .order-item, .order-peek, .rename__input {border-radius:var(--ds-radius-control)}
 .word-card {border-radius:var(--ds-radius-container)}
-.title, .subtitle, .who, .word, .verdict__who {font-weight:700}
+.title, .subtitle, .who, .word, .verdict__who {font-weight:500; font-variation-settings:normal; letter-spacing:-.035em}
+
+/* Felt (design system 0.6): buttons, keys and chips are raised pills. Pressed
+   presses in. Ghost buttons stay flat with an outline so they read as secondary.
+   Role colours on pressed chips, chosen players and danger buttons stay as they are. */
+.btn, .chip, .segmented .chip {border-radius:var(--ds-radius-pill)}
+.btn:not(.btn--ghost), .chip, .player-btn, .order-item, .order-peek {border-color:transparent; box-shadow:var(--ds-shadow-raised)}
+.chip {background:var(--ds-surface-raised); color:var(--ds-text-secondary)}
+.btn:not(.btn--ghost):active, .chip:active, .player-btn:active, .order-peek:active {box-shadow:var(--ds-shadow-pressed)}
+.order-item[aria-pressed="true"] {box-shadow:var(--ds-shadow-pressed)}
+.btn:disabled {box-shadow:none}
 .footer {padding:12px 0; text-align:left}
