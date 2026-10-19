@@ -174,7 +174,8 @@ board harder to read.
 src/game.js      the rules. Pure — no React, no DOM, no Math.random
 src/words.js     the three word packs, and the rules they must obey
 src/App.jsx      screens and components
-src/app.css      tokens, theme, layout
+src/app.css      layout, game colours and the Felt touches over the shared tokens
+src/sw.template.js  offline cache list; must match files in dist/
 src/main.jsx     entry point, registers the service worker
 test/run.mjs     rules tests
 test/e2e.mjs     browser tests, driven over CDP at a phone viewport
@@ -187,12 +188,18 @@ straight into Node with no build step.
 ## Tests
 
 ```bash
-npm test                     # rules — 120 assertions
+npm test                     # rules — 123 assertions
 
 ./build.sh
 node test/serve.mjs &        # serves dist/ on 8123
 node test/e2e.mjs            # browser — 85 assertions, 390×844
 ```
+
+`test/e2e.mjs` is out of date: it still looks for the old `.stepper__value`
+counter, which the app dropped when it adopted the shared player and role
+steppers, so it stops early. Until it is updated, the design-system repository's
+`check-game-privacy.mjs` and `check-rollout.mjs` cover secrecy, reload, appearance
+and the 60px game targets.
 
 The rules suite runs 800 seeded playthroughs across both vote modes and
 asserts, at every step of every game, that nobody is left standing when they
@@ -231,10 +238,12 @@ serving static assets**; `wrangler.jsonc` declares `dist/` as the asset
 directory. If wiring it up through Pages instead: framework preset None, build
 command `npm run build`, output directory `dist`.
 
-`dist/` is generated on every build and is not in the repo. Neither are any
-binaries — fonts are copied out of the `@ibm/plex-*` packages at build time and
-the PNG icons are decoded from `src/static/icons.b64.json`, so every file here
-is readable text.
+`dist/` is generated on every build and is not in the repo. The app's own
+source has no binaries: the PNG icons are decoded from
+`src/static/icons.b64.json`. The only binaries are the committed design-system
+release, its tarball and the Host Grotesk fonts and texture tiles in
+`src/design-system/`, which `build.sh` copies into `dist/fonts/` and `dist/felt/`.
+The `@ibm/plex-*` dev dependencies are no longer used by the build.
 
 ## Notes
 
@@ -246,12 +255,20 @@ is readable text.
 - The game is a prototype of the published party game *Undercover*, rethemed.
 
 
-## Shared design system (0.1.0)
+## Shared design system (0.7.0)
 
-This checkout consumes generated assets from `@doshi-experiments/design-system`.
-The `design-system/release.json` file (under `public/` or `src/` where applicable)
-records their version and hashes. Edit the shared token source, rebuild it, and
-run its `scripts/sync.mjs` against this asset directory to upgrade. Do not edit
-these generated files locally. Keep the `sheet-theme` cookie and pre-paint
-stamp intact. Light/dark appearance and project identity are separate dimensions.
-Hanken Grotesk is served locally with its OFL notice.
+The game depends on the committed release tarball and commits a hashed snapshot in
+`src/design-system/` that CI re-checks. Never edit either by hand; upgrade through
+the design-system repository's central `npm run rollout` command. Keep the
+`sheet-theme` cookie and the prepaint script intact.
+
+The game wears the shared Felt identity at game density (60px targets): Host
+Grotesk, warm grey wool and charcoal, a fibre texture, and the signal, a
+raspberry-to-brick gradient under white text. Buttons and chips are raised pills
+that press in; primary buttons and chosen chips use the gradient. Player name fields
+are pressed into the felt and show a 3px focus ring.
+
+Role fills keep their own meaning and their own text colour. The undercover mustard
+and the Mr. Shake amber are dark in light mode and light in dark mode, so their text
+uses `--on-role` (white in light mode, ink in dark mode) and never the signal's white
+`action-text`.
