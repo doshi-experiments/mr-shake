@@ -272,3 +272,7 @@ Role fills keep their own meaning and their own text colour. The undercover must
 and the Mr. Shake amber are dark in light mode and light in dark mode, so their text
 uses `--on-role` (white in light mode, ink in dark mode) and never the signal's white
 `action-text`.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). The exception: the Host Grotesk font files in `src/design-system/fonts/` are under the SIL Open Font License 1.1 (`host-grotesk-OFL.txt` beside them).
