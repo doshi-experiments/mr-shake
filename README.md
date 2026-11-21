@@ -255,7 +255,7 @@ The `@ibm/plex-*` dev dependencies are no longer used by the build.
 - The game is a prototype of the published party game *Undercover*, rethemed.
 
 
-## Shared design system (0.7.0)
+## Shared design system (0.8.1)
 
 The game depends on the committed release tarball and commits a hashed snapshot in
 `src/design-system/` that CI re-checks. Never edit either by hand; upgrade through
