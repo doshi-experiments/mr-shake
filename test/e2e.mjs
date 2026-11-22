@@ -69,13 +69,20 @@ const send = (method, params = {}, sessionId) =>
     ws.send(JSON.stringify({ id, method, params, sessionId }));
   });
 
-const { targetId } = await send("Target.createTarget", { url: "about:blank" });
-const { sessionId } = await send("Target.attachToTarget", { targetId, flatten: true });
+// Each fresh start gets its own tab. A game in progress lives in sessionStorage, which
+// belongs to the tab, and the app rewrites it on pagehide to conceal the word, so clearing
+// it and reloading the same tab brings the game straight back.
+let targetId, sessionId;
 const S = (m, p) => send(m, p, sessionId);
-await S("Page.enable"); await S("Runtime.enable"); await S("Log.enable");
-// iPhone 14-ish. The whole design is mobile-first; desktop is the edge case.
-await S("Emulation.setDeviceMetricsOverride",
-        { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+const openTab = async () => {
+  if (targetId) await send("Target.closeTarget", { targetId });
+  ({ targetId } = await send("Target.createTarget", { url: "about:blank" }));
+  ({ sessionId } = await send("Target.attachToTarget", { targetId, flatten: true }));
+  await S("Page.enable"); await S("Runtime.enable"); await S("Log.enable");
+  // iPhone 14-ish. The whole design is mobile-first; desktop is the edge case.
+  await S("Emulation.setDeviceMetricsOverride",
+          { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+};
 
 const evalJs = async (expr) => {
   const r = await S("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true });
@@ -84,13 +91,16 @@ const evalJs = async (expr) => {
   return r.result.value;
 };
 const go = async () => {
+  await openTab();
   await S("Page.navigate", { url: BASE });
   await sleep(400);
-  await evalJs("sessionStorage.clear(); localStorage.removeItem('mr-shake:setup')");
+  await evalJs("localStorage.removeItem('mr-shake:setup')");
   await S("Page.reload", {});
   await sleep(900);
 };
 const reload = async () => { await S("Page.reload", {}); await sleep(900); };
+// Back to setup with the remembered table (localStorage) but no game in progress.
+const restart = async () => { await openTab(); await S("Page.navigate", { url: BASE }); await sleep(900); };
 const text = async () => (await evalJs("document.body.innerText")).toLowerCase();
 const shot = async (name) => {
   const { data } = await S("Page.captureScreenshot", { format: "png" });
@@ -108,6 +118,19 @@ const clickExact = (label) => evalJs(`(() => {
   if (!el) return false; el.click(); return true;
 })()`);
 const phase = () => evalJs("document.querySelector('.app').dataset.phase");
+// Every control on screen, with its smallest side: 44px anywhere, and 60px for the game's
+// own controls at game density. The shared header and skip link keep the system's 44px.
+const smallTargets = () => evalJs(`(() => {
+  const game = document.documentElement.dataset.density === 'game';
+  const bad = [];
+  for (const el of document.querySelectorAll('button, select, input:not([type=hidden]), summary, a[href]')) {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    const minimum = game && !el.closest('.ds-site-header, .ds-skip') ? 60 : 44;
+    if (Math.min(r.width, r.height) < minimum) bad.push((el.textContent || el.getAttribute('aria-label') || el.tagName).trim().slice(0, 20) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' < ' + minimum);
+  }
+  return bad;
+})()`);
 
 // Read the packs straight from source so the browser assertions compare
 // against the same data the app ships.
@@ -130,11 +153,13 @@ ok("the setup screen renders", (await text()).includes("everyone gets the same w
 ok("it starts on setup", (await phase()) === "setup");
 ok("the deal button is live", await evalJs(
   `!![...document.querySelectorAll('button')].find(b => b.textContent.includes('Deal the words') && !b.disabled)`));
+ok("setup controls meet 44px, and 60px at game density", (await smallTargets()).length === 0, (await smallTargets()).slice(0, 3).join(" | "));
 await shot("01-setup");
 
 head("Setup controls");
 {
-  const count = () => evalJs("document.querySelector('.stepper__value').firstChild.textContent");
+  // The shared NumberStepper shows the count, then its suffix on a second line.
+  const count = () => evalJs("document.querySelector('.ds-stepper-value').innerText.trim().split('\\n')[0]");
   const before = await count();
   await stepper("players", +1); await sleep(150);
   const after = await count();
@@ -149,7 +174,7 @@ head("Setup controls");
   // Push it into an invalid composition and confirm the deal is refused.
   for (let i = 0; i < 6; i++) await stepper("Undercovers", +1);
   await sleep(200);
-  const capped = await evalJs("[...document.querySelectorAll('.role-row__count')].map(e=>e.textContent).join('/')");
+  const capped = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('.ds-stepper-value')).innerText.trim().split('\\n')[0]).join('/')");
   ok("impostors cannot be raised past the point of no game",
      (await evalJs(`!![...document.querySelectorAll('button')].find(b => b.textContent.includes('Deal the words') && !b.disabled)`)),
      "civ/und/shake = " + capped);
@@ -262,8 +287,7 @@ await go();
   ok("and it is not in the clean pack", !CLEAN_IDS.has(verdict.split("|").sort().join("|")));
 
   // Switching back must clear the selection rather than stranding it.
-  await evalJs("sessionStorage.clear()");
-  await reload();
+  await restart();
   ok("the pack choice was remembered across a reload",
      await evalJs(`[...document.querySelectorAll('.chip')].find(c=>c.textContent==='Rude').getAttribute('aria-pressed')==='true'`));
   await evalJs(`[...document.querySelectorAll('.chips .chip')][0].click()`); await sleep(250);
@@ -451,7 +475,7 @@ await go();
 head("Playing again keeps the table and changes the words");
 {
   const before = await evalJs("[...document.querySelectorAll('.pair-word')].map(e=>e.textContent).join('/')");
-  await click("again, same people");
+  await click("play again");
   await sleep(STEP);
   ok("straight back into a reveal", (await phase()) === "reveal");
   ok("with the same six players", (await text()).includes("player 1 of 6"));
@@ -481,7 +505,7 @@ await go();
   await stepper("players", -1); await sleep(200);
   await stepper("Undercovers", -1); await sleep(200);
   await stepper("Mr. Shake", +1); await sleep(200);
-  const comp = await evalJs("[...document.querySelectorAll('.role-row__count')].map(e=>e.textContent).join('/')");
+  const comp = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('.ds-stepper-value')).innerText.trim().split('\\n')[0]).join('/')");
   ok("set up 3 civilians and one Mr. Shake", comp === "3/0/1", comp);
 
   await click("deal the words"); await sleep(STEP);
@@ -648,11 +672,16 @@ await go();
 head("Both sheets");
 await go();
 {
+  // The shared header's Appearance select replaced the old theme switch.
   const before = await evalJs("document.documentElement.dataset.theme");
-  await evalJs("document.querySelector('.switch').click()");
+  await evalJs(`(() => {
+    const select = [...document.querySelectorAll('select')].find(s => s.labels?.[0]?.textContent.includes('Appearance') || s.closest('label')?.textContent.includes('Appearance'));
+    select.value = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    select.dispatchEvent(new Event('change', {bubbles: true}));
+  })()`);
   await sleep(400);
   const after = await evalJs("document.documentElement.dataset.theme");
-  ok("the theme switch flips the sheet", before !== after, before + " → " + after);
+  ok("the Appearance select flips the sheet", before !== after, before + " → " + after);
   ok("and writes the shared cookie",
      (await evalJs("document.cookie")).includes("sheet-theme=" + after));
   await shot("08-setup-" + after);
@@ -667,15 +696,8 @@ head("Nothing overflows the phone");
   const overflow = await evalJs(
     "document.documentElement.scrollWidth - document.documentElement.clientWidth");
   ok("no horizontal scroll at 390px", overflow <= 0, overflow + "px");
-  const small = await evalJs(`(() => {
-    const bad = [];
-    for (const b of document.querySelectorAll('button')) {
-      const r = b.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0 && r.height < 40) bad.push(b.textContent.trim().slice(0,20) + ' ' + Math.round(r.height));
-    }
-    return bad;
-  })()`);
-  ok("every tap target is at least 40px tall", small.length === 0, small.slice(0, 3).join(" | "));
+  const small = await smallTargets();
+  ok("every tap target meets 44px, and 60px at game density", small.length === 0, small.slice(0, 3).join(" | "));
 }
 
 ok("no console errors anywhere in the run", problems.length === 0, problems.join(" | "));

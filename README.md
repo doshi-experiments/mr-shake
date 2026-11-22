@@ -192,14 +192,15 @@ npm test                     # rules — 123 assertions
 
 ./build.sh
 node test/serve.mjs &        # serves dist/ on 8123
-node test/e2e.mjs            # browser — 85 assertions, 390×844
+node test/e2e.mjs            # browser — 86 assertions, 390×844
 ```
 
-`test/e2e.mjs` is out of date: it still looks for the old `.stepper__value`
-counter, which the app dropped when it adopted the shared player and role
-steppers, so it stops early. Until it is updated, the design-system repository's
-`check-game-privacy.mjs` and `check-rollout.mjs` cover secrecy, reload, appearance
-and the 60px game targets.
+`test/e2e.mjs` plays full games in headless Chrome and fails on any control under
+44px, or under 60px for the game's own controls at game density (the shared site
+header keeps the system's 44px). Each test that starts fresh opens a new tab,
+because a game in progress lives in that tab's sessionStorage. The design-system
+repository's `check-game-privacy.mjs` and `check-rollout.mjs` cover the same game
+across the shared release.
 
 The rules suite runs 800 seeded playthroughs across both vote modes and
 asserts, at every step of every game, that nobody is left standing when they

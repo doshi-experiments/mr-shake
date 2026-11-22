@@ -28,7 +28,7 @@ npm run build          # ./build.sh → dist/ (not committed)
 npm run serve          # http://localhost:8099
 ```
 
-`test/e2e.mjs` (CDP at 390×844) is out of date: it looks for the old `.stepper__value` counter and stops early. Until it is fixed, rely on the design-system repository's `scripts/check-game-privacy.mjs` and `check-rollout.mjs`, which cover conceal, reload, Home/Back, appearance and 60px targets. CI builds, runs the rules suite and re-verifies `src/design-system/release.json`.
+Browser suite: `./build.sh && node test/serve.mjs & node test/e2e.mjs` (CDP at 390×844, using the installed Google Chrome). It plays full games, checks secrecy, reloads and both appearances, and fails on any control under 44px, or under 60px for the game's own controls at game density. Each fresh start opens a new tab: a game in progress lives in the tab's sessionStorage and is rewritten on `pagehide`, so clearing it and reloading the same tab brings it back. The design-system repository's `scripts/check-game-privacy.mjs` and `check-rollout.mjs` cover the same game across the shared release. CI builds, runs the rules suite and re-verifies `src/design-system/release.json`.
 
 ## Architecture
 
