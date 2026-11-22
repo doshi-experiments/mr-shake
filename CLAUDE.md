@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Mr. Shake at mr-shake.rishabhdoshi.com: a React pass-and-play party game for one phone (a rethemed *Undercover*). Installable and offline. `README.md` is authoritative for the rules, the word packs and the secrecy design. Author commits as `doshi-experiments <311927837+doshi-experiments@users.noreply.github.com>`.
+Mr. Shake at mr-shake.rishabhdoshi.com: a React 19 pass-and-play party game for one phone (a rethemed *Undercover*). Installable and offline. `README.md` is authoritative for the rules, the word packs and the secrecy design. Author commits as `doshi-experiments <311927837+doshi-experiments@users.noreply.github.com>`.
 
 ## Never publish PII or sensitive information
 
@@ -28,18 +28,18 @@ npm run build          # ./build.sh → dist/ (not committed)
 npm run serve          # http://localhost:8099
 ```
 
-Browser suite: `./build.sh && node test/serve.mjs & node test/e2e.mjs` (CDP at 390×844, using the installed Google Chrome). It plays full games, checks secrecy, reloads and both appearances, and fails on any control under 44px, or under 60px for the game's own controls at game density. Each fresh start opens a new tab: a game in progress lives in the tab's sessionStorage and is rewritten on `pagehide`, so clearing it and reloading the same tab brings it back. The design-system repository's `scripts/check-game-privacy.mjs` and `check-rollout.mjs` cover the same game across the shared release. CI builds, runs the rules suite and re-verifies `src/design-system/release.json`.
+Browser suite: `./build.sh && node test/serve.mjs & node test/e2e.mjs` (CDP at 390×844, using the installed Google Chrome). It plays full games, checks secrecy, reloads and both appearances, and fails on any control under 44px, or under 60px for the game's own controls at game density. Each fresh start opens a new tab: a game in progress lives in the tab's sessionStorage and is rewritten on `pagehide`, so clearing it and reloading the same tab brings it back. The design-system repository's `scripts/check-game-privacy.mjs` and `check-rollout.mjs` cover the same game across the shared release. CI runs `npm ci` (which checks the design-system tarball against the lockfile), builds and runs the rules suite.
 
 ## Architecture
 
 - `src/game.js` is the rules: pure, no React, no DOM and no `Math.random`. Chance always comes from an explicit `rng`, so a game replays from a seed and imports straight into Node.
 - `src/words.js` holds the three packs and the rules they must obey. `src/App.jsx` holds the screens. `src/app.css` holds layout, role colours and the Felt touches over the shared tokens.
-- The game depends on the committed design-system tarball and commits a hashed snapshot in `src/design-system/`. Never edit either; upgrade through the design-system repository's central `npm run rollout`.
+- The game depends on the committed design-system tarball. Never edit it; upgrade through the design-system repository's central `npm run rollout`. `src/tw.css` is the stylesheet: Tailwind CSS v4 and Felt's theme, then `components.css`, `legacy.css` and `app.css` in the components layer (their old order, so their cascade is unchanged). Buttons stay on `/react`'s `Button`: the game's `.btn` rules in `app.css` style them, and `/ui`'s utilities would outrank those.
 
 ## Invariants that are easy to break
 
 - **Secrecy is the core invariant.** Civilian and undercover reveal payloads must have the same shape, and an elimination names the role, never the word.
 - Tap targets are at least 44px everywhere and 60px at game density.
 - Role fills (undercover mustard, Mr. Shake amber) take their text from `--on-role` (white in light mode, ink in dark mode), never from the signal's white `action-text`.
-- `src/sw.template.js` precaches a fixed list; every entry must exist in `dist/`, or `cache.addAll` fails and the new worker never installs. `build.sh` must copy the design-system fonts and `felt/` tiles.
+- `src/sw.template.js` precaches a fixed list; every entry must exist in `dist/`, or `cache.addAll` fails and the new worker never installs. `build.sh` must copy the tarball's fonts and `felt/` tiles: the Tailwind CLI leaves `url(./fonts/…)` as written.
 - The headline is exactly "Everyone gets the same word." with "Kind of" on the next line. Optional rules live under "How to play".

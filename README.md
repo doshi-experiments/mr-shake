@@ -175,6 +175,7 @@ src/game.js      the rules. Pure — no React, no DOM, no Math.random
 src/words.js     the three word packs, and the rules they must obey
 src/App.jsx      screens and components
 src/app.css      layout, game colours and the Felt touches over the shared tokens
+src/tw.css       the stylesheet: Tailwind CSS v4, Felt's theme, then the CSS above
 src/sw.template.js  offline cache list; must match files in dist/
 src/main.jsx     entry point, registers the service worker
 test/run.mjs     rules tests
@@ -241,9 +242,9 @@ command `npm run build`, output directory `dist`.
 
 `dist/` is generated on every build and is not in the repo. The app's own
 source has no binaries: the PNG icons are decoded from
-`src/static/icons.b64.json`. The only binaries are the committed design-system
-release, its tarball and the Host Grotesk fonts and texture tiles in
-`src/design-system/`, which `build.sh` copies into `dist/fonts/` and `dist/felt/`.
+`src/static/icons.b64.json`. The only binary is the committed design-system
+release tarball; `build.sh` copies its Host Grotesk fonts and texture tiles from
+`node_modules` into `dist/fonts/` and `dist/felt/`.
 The `@ibm/plex-*` dev dependencies are no longer used by the build.
 
 ## Notes
@@ -256,12 +257,20 @@ The `@ibm/plex-*` dev dependencies are no longer used by the build.
 - The game is a prototype of the published party game *Undercover*, rethemed.
 
 
-## Shared design system (0.8.1)
+## Shared design system (0.10.1)
 
-The game depends on the committed release tarball and commits a hashed snapshot in
-`src/design-system/` that CI re-checks. Never edit either by hand; upgrade through
-the design-system repository's central `npm run rollout` command. Keep the
-`sheet-theme` cookie and the prepaint script intact.
+The game depends on the committed release tarball, which `npm ci` checks against the
+lockfile. Never edit it by hand; upgrade through the design-system repository's
+central `npm run rollout` command. Keep the `sheet-theme` cookie and the prepaint
+script intact.
+
+Styles build with Tailwind CSS v4 (`@tailwindcss/cli`). `src/tw.css` imports Tailwind
+and Felt's theme, then the shared `components.css`, `legacy.css` and the game's
+`app.css` in the components layer, in the order they always loaded, so their cascade
+is unchanged and utilities override them. A small base block keeps what the game drew
+before it had a reset: name fields use the browser's normal line height, and
+placeholders its own grey. `game:` targets Felt's game density and `min-h-target` is
+60px there, for new markup.
 
 The game wears the shared Felt identity at game density (60px targets): Host
 Grotesk, warm grey wool and charcoal, a fibre texture, and the signal, a
@@ -276,4 +285,4 @@ uses `--on-role` (white in light mode, ink in dark mode) and never the signal's 
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE). The exception: the Host Grotesk font files in `src/design-system/fonts/` are under the SIL Open Font License 1.1 (`host-grotesk-OFL.txt` beside them).
+MIT, see [LICENSE](LICENSE). The exception: the Host Grotesk font files in the design-system tarball (copied to `dist/fonts/`) are under the SIL Open Font License 1.1 (`host-grotesk-OFL.txt` beside them).
