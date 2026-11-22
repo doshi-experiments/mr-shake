@@ -69,7 +69,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 }
 h1.title {
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(1.9375rem, 7.5vw, 3.0625rem);
   line-height: 1.1;
@@ -78,7 +77,6 @@ h1.title {
 }
 h2.subtitle {
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: 1.3125rem;
   line-height: 1.2;
@@ -93,7 +91,6 @@ h2.subtitle {
    a phone being held out to them. */
 .who {
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2.25rem, 13vw, 3.75rem);
   line-height: 1.05;
@@ -128,7 +125,6 @@ h2.subtitle {
 .btn:active { transform: scale(0.96); }
 .btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
-.btn--primary { background: var(--civilian); border-color: var(--civilian); color: var(--on-accent); font-weight: 600; }
 .btn--danger  { background: var(--undercover); border-color: var(--undercover); color: var(--on-role); font-weight: 600; }
 .btn--ghost   { background: transparent; }
 .btn--small   { min-height: 44px; font-size: 0.875rem; padding: 0.5rem 0.875rem; width: auto; }
@@ -176,7 +172,6 @@ h2.subtitle {
 .word-card--shake { border-color: var(--shake-soft); background: var(--shake-wash); }
 .word {
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2rem, 11vw, 3.25rem);
   line-height: 1.05;
@@ -203,7 +198,7 @@ h2.subtitle {
 }
 .role-row--civilian { border-left-color: var(--civilian); }
 .role-row--undercover { border-left-color: var(--undercover); }
-.role-row--shake { border-left-color: var(--shake); }
+.role-row--mrshake { border-left-color: var(--shake); }
 .role-row__name { font-weight: 600; font-size: 0.9375rem; }
 .role-row__note { font-size: 0.75rem; color: var(--mute); line-height: 1.35; }
 .role-row__count {
@@ -362,7 +357,6 @@ h2.subtitle {
 .verdict--mrshake .verdict__who { color: var(--shake); }
 .verdict__who {
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-weight: 600;
   font-size: clamp(2rem, 10vw, 3rem);
   line-height: 1.05;
@@ -394,7 +388,7 @@ h2.subtitle {
 
 .pair-line { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
 .pair-word { font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0; font-size: 1.25rem; font-weight: 600; }
+  font-size: 1.25rem; font-weight: 600; }
 .pair-word--civilian { color: var(--civilian); }
 .pair-word--undercover { color: var(--undercover); }
 
@@ -411,7 +405,6 @@ h2.subtitle {
   background: var(--card);
   color: var(--ink);
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-size: 1.375rem;
   font-weight: 600;
   text-align: center;
@@ -474,7 +467,6 @@ h2.subtitle {
   background: var(--card);
   color: var(--ink);
   font-family: var(--ds-font-display);
-  font-variation-settings: "FLAR" 15, "VOLM" 0;
   font-size: 1.75rem;
   font-weight: 600;
   text-align: center;

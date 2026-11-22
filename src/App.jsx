@@ -251,7 +251,7 @@ function Setup({ state, dispatch }) {
                    note="Similar word. Blend in."
                    min={0} max={Math.max(0, maxImpostors - s.mrShakes)}
                    onChange={(v) => patch({ undercovers: v })} />
-          <RoleRow kind="shake" name="Mr. Shake" count={s.mrShakes}
+          <RoleRow kind="mrshake" name="Mr. Shake" count={s.mrShakes}
                    note={s.players < MIN_PLAYERS_FOR_MRSHAKE
                      ? "Needs " + MIN_PLAYERS_FOR_MRSHAKE + " players or more."
                      : "No word. Bluff, then guess if caught."}
