@@ -245,7 +245,6 @@ source has no binaries: the PNG icons are decoded from
 `src/static/icons.b64.json`. The only binary is the committed design-system
 release tarball; `build.sh` copies its Host Grotesk fonts and texture tiles from
 `node_modules` into `dist/fonts/` and `dist/felt/`.
-The `@ibm/plex-*` dev dependencies are no longer used by the build.
 
 ## Notes
 
