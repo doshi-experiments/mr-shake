@@ -126,7 +126,7 @@ const smallTargets = () => evalJs(`(() => {
   for (const el of document.querySelectorAll('button, select, input:not([type=hidden]), summary, a[href]')) {
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height) continue;
-    const minimum = game && !el.closest('.ds-site-header, .ds-skip') ? 60 : 44;
+    const minimum = game && !el.closest('[data-slot=site-header], .skip-link') ? 60 : 44;
     if (Math.min(r.width, r.height) < minimum) bad.push((el.textContent || el.getAttribute('aria-label') || el.tagName).trim().slice(0, 20) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' < ' + minimum);
   }
   return bad;
@@ -159,7 +159,7 @@ await shot("01-setup");
 head("Setup controls");
 {
   // The shared NumberStepper shows the count, then its suffix on a second line.
-  const count = () => evalJs("document.querySelector('.ds-stepper-value').innerText.trim().split('\\n')[0]");
+  const count = () => evalJs("document.querySelector('[data-slot=number-stepper-value]').innerText.trim().split('\\n')[0]");
   const before = await count();
   await stepper("players", +1); await sleep(150);
   const after = await count();
@@ -174,7 +174,7 @@ head("Setup controls");
   // Push it into an invalid composition and confirm the deal is refused.
   for (let i = 0; i < 6; i++) await stepper("Undercovers", +1);
   await sleep(200);
-  const capped = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('.ds-stepper-value')).innerText.trim().split('\\n')[0]).join('/')");
+  const capped = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('[data-slot=number-stepper-value]')).innerText.trim().split('\\n')[0]).join('/')");
   ok("impostors cannot be raised past the point of no game",
      (await evalJs(`!![...document.querySelectorAll('button')].find(b => b.textContent.includes('Deal the words') && !b.disabled)`)),
      "civ/und/shake = " + capped);
@@ -505,7 +505,7 @@ await go();
   await stepper("players", -1); await sleep(200);
   await stepper("Undercovers", -1); await sleep(200);
   await stepper("Mr. Shake", +1); await sleep(200);
-  const comp = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('.ds-stepper-value')).innerText.trim().split('\\n')[0]).join('/')");
+  const comp = await evalJs("[...document.querySelectorAll('.role-row')].map(r=>(r.querySelector('.role-row__count')||r.querySelector('[data-slot=number-stepper-value]')).innerText.trim().split('\\n')[0]).join('/')");
   ok("set up 3 civilians and one Mr. Shake", comp === "3/0/1", comp);
 
   await click("deal the words"); await sleep(STEP);

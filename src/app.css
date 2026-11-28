@@ -1,8 +1,6 @@
 /* Mr. Shake: common identity at a phone-friendly game scale. */
 
 :root {
-  --radius: var(--ds-radius-container);
-  --tap: 60px;
   --shell: 34rem;
   font-synthesis-weight: none;
   -webkit-text-size-adjust: 100%;
@@ -17,8 +15,8 @@ html, body, #root {
   background: var(--ds-surface-page);
 }
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--ds-surface-page);
+  color: var(--ds-text);
   font-family: var(--ds-font-body);
   font-size: 1rem;
   line-height: 1.55;
@@ -42,7 +40,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .game-controls {display:flex; align-items:center; justify-content:flex-end; gap:1rem; min-height:64px; padding:12px 0}
 .game-rules {margin-top:12px}
 .game-rules p {max-width:64ch; margin:0 0 12px; font-size:.9375rem}
-.app > .ds-site-header {margin-bottom:8px; width:100%; max-width:none}
 
 .stage {
   flex: 1 1 auto;
@@ -64,7 +61,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   font-family: var(--ds-font-body);
   font-size: 0.6875rem;
   letter-spacing: normal;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
   margin: 0;
 }
 h1.title {
@@ -82,8 +79,8 @@ h2.subtitle {
   line-height: 1.2;
   margin: 0;
 }
-.lede { font-size: 0.9375rem; line-height: 1.5; color: var(--mute); margin: 0; }
-.fine { font-size: 0.8125rem; line-height: 1.45; color: var(--mute); margin: 0; }
+.lede { font-size: 0.9375rem; line-height: 1.5; color: var(--ds-text-secondary); margin: 0; }
+.fine { font-size: 0.8125rem; line-height: 1.45; color: var(--ds-text-secondary); margin: 0; }
 .mono { font-family: var(--ds-font-body); }
 
 /* The name of whoever is holding the phone. Deliberately enormous —
@@ -99,50 +96,25 @@ h2.subtitle {
   overflow-wrap: anywhere;
 }
 
-/* ---------------- buttons ---------------- */
+/* ---------------- game keys ---------------- */
 
-.btn {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: var(--tap);
-  padding: 0.875rem 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.25;
-  cursor: pointer;
-  transition: transform 0.08s ease, opacity 0.15s ease, background-color 0.15s ease;
-  text-align: center;
-}
-.btn:active { transform: scale(0.96); }
-.btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
-
-.btn--danger  { background: var(--undercover); border-color: var(--undercover); color: var(--on-role); font-weight: 600; }
-.btn--ghost   { background: transparent; }
-.btn--small   { min-height: 44px; font-size: 0.875rem; padding: 0.5rem 0.875rem; width: auto; }
-.btn--tall    { min-height: 5.5rem; font-size: 1.25rem; font-weight: 600; }
-
-/* Disabled is load-bearing here, not decoration: it is the lockout that
-   stops a double-tap skipping a player. It must never look tappable. */
-.btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
-
-.btn-row { display: flex; gap: 0.625rem; }
-.btn-row > .btn { width: auto; flex: 1; }
+/* Chips, player buttons, the speaking order and the face-down card are the game's own controls.
+   They start from what the shared .ds-button drew (until 0.14 they were built on it), and the
+   rules below give each its shape. Disabled is load-bearing, not decoration: it is the lockout
+   that stops a double-tap skipping a player, so it must never look tappable. */
+.game-key {font:inherit; font-weight:600; min-height:var(--ds-control-height); min-width:var(--ds-control-target); border:1px solid transparent; border-radius:var(--ds-radius-pill); padding:10px 20px; background:var(--ds-surface-raised); color:var(--ds-text); box-shadow:var(--ds-shadow-raised); cursor:pointer}
+.game-key:disabled {cursor:not-allowed; color:var(--ds-text-disabled)}
+.game-key:focus-visible {outline:3px solid var(--ds-focus); outline-offset:4px}
+.game-key:active:not(:disabled) {box-shadow:var(--ds-shadow-pressed)}
+@media(prefers-reduced-motion:no-preference) {.game-key {transition:transform var(--ds-duration-fast) var(--ds-ease),box-shadow var(--ds-duration-fast) var(--ds-ease),background-color var(--ds-duration-fast) var(--ds-ease)} .game-key:active:not(:disabled) {transform:translateY(1px)}}
+.game-key.game-key:disabled {background:var(--ds-surface-inset); color:var(--ds-text-disabled); border-color:transparent; box-shadow:none}
 
 /* ---------------- cards ---------------- */
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  background: var(--ds-surface-raised);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-container);
   padding: 1.125rem;
 }
 .card--flush { padding: 0; overflow: hidden; }
@@ -158,18 +130,18 @@ h2.subtitle {
   gap: 0.75rem;
   min-height: 15rem;
   padding: 1.5rem;
-  border-radius: var(--radius);
-  border: 2px solid var(--line);
-  background: var(--card);
+  border-radius: var(--ds-radius-container);
+  border: 2px solid var(--ds-border);
+  background: var(--ds-surface-raised);
   text-align: center;
 }
 .word-card--face-down {
   border-style: dashed;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
   cursor: pointer;
 }
-.word-card--word { border-color: var(--civilian-soft); background: var(--civilian-wash); }
-.word-card--shake { border-color: var(--shake-soft); background: var(--shake-wash); }
+.word-card--word { border-color: var(--ds-success-icon); background: var(--ds-success-bg); }
+.word-card--shake { border-color: var(--ds-warning-icon); background: var(--ds-warning-bg); }
 .word {
   font-family: var(--ds-font-display);
   font-weight: 600;
@@ -182,7 +154,7 @@ h2.subtitle {
 /* ---------------- setup ---------------- */
 
 .field { display: flex; flex-direction: column; gap: 0.375rem; }
-.label { font-size: 0.8125rem; color: var(--mute); }
+.label { font-size: 0.8125rem; color: var(--ds-text-secondary); }
 
 .roles { display:grid; gap:0.625rem; }
 .role-row {
@@ -191,16 +163,16 @@ h2.subtitle {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0.875rem;
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--line);
+  border: 1px solid var(--ds-border);
+  border-left: 4px solid var(--ds-border);
   border-radius: 10px;
-  background: var(--card);
+  background: var(--ds-surface-raised);
 }
-.role-row--civilian { border-left-color: var(--civilian); }
-.role-row--undercover { border-left-color: var(--undercover); }
-.role-row--mrshake { border-left-color: var(--shake); }
+.role-row--civilian { border-left-color: var(--ds-success-text); }
+.role-row--undercover { border-left-color: var(--ds-chart-4); }
+.role-row--mrshake { border-left-color: var(--ds-warning-text); }
 .role-row__name { font-weight: 600; font-size: 0.9375rem; }
-.role-row__note { font-size: 0.75rem; color: var(--mute); line-height: 1.35; }
+.role-row__note { font-size: 0.75rem; color: var(--ds-text-secondary); line-height: 1.35; }
 .role-row__count {
   font-family: var(--ds-font-body);
   font-size: 1.375rem;
@@ -225,21 +197,21 @@ h2.subtitle {
 .name-field__n {
   font-family: var(--ds-font-body);
   font-size: 0.75rem;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
   flex: 0 0 auto;
   min-width: 0.75rem;
 }
-.name-field:focus-within { border-color: var(--civilian); outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+.name-field:focus-within { border-color: var(--ds-success-text); outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 .name-field .name-input { border: none; background: transparent; padding-left: 0; }
 .name-field .name-input:focus-visible { outline: none; }
 .name-input {
   width: 100%;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ds-border);
   border-radius: 10px;
-  background: var(--card);
-  color: var(--ink);
+  background: var(--ds-surface-raised);
+  color: var(--ds-text);
   font-family: inherit;
   font-size: 1rem;
 }
@@ -248,12 +220,12 @@ h2.subtitle {
 .chips { display: flex; flex-wrap: wrap; gap: 0.4375rem; }
 .chip {
   appearance: none;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.4375rem 0.75rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ds-border);
   border-radius: var(--ds-radius-control);
   background: transparent;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
   font-family: inherit;
   font-size: 0.8125rem;
   cursor: pointer;
@@ -265,9 +237,9 @@ h2.subtitle {
 .segmented .chip { flex: 1; justify-content: center; text-align: center; border-radius: 10px; }
 
 .errors {
-  border: 1px solid var(--undercover-soft);
-  background: var(--undercover-wash);
-  color: var(--undercover);
+  border: 1px solid var(--ds-chart-4);
+  background: var(--ds-error-bg);
+  color: var(--ds-chart-4);
   border-radius: 10px;
   padding: 0.75rem 0.875rem;
   font-size: 0.8125rem;
@@ -280,12 +252,12 @@ h2.subtitle {
 .player-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem; }
 .player-btn {
   appearance: none;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.75rem 0.625rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ds-border);
   border-radius: 12px;
-  background: var(--card);
-  color: var(--ink);
+  background: var(--ds-surface-raised);
+  color: var(--ds-text);
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
@@ -293,7 +265,7 @@ h2.subtitle {
   overflow-wrap: anywhere;
 }
 .player-btn:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
-.player-btn[aria-pressed="true"] { background: var(--undercover); border-color: var(--undercover); color: var(--on-role); }
+.player-btn[aria-pressed="true"] { background: var(--ds-chart-4); border-color: var(--ds-chart-4); color: var(--on-role); }
 .player-btn:disabled { opacity: 0.4; pointer-events: none; }
 
 .order-list { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; counter-reset: seat; }
@@ -302,27 +274,27 @@ h2.subtitle {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 0.75rem;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.625rem 0.875rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ds-border);
   border-radius: 10px;
-  background: var(--card);
+  background: var(--ds-surface-raised);
   cursor: pointer;
   font-size: 1rem;
   text-align: left;
   width: 100%;
   font-family: inherit;
-  color: var(--ink);
+  color: var(--ds-text);
 }
 .order-item__n {
   font-family: var(--ds-font-body);
   font-size: 0.8125rem;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
   width: 1.25rem;
 }
-.order-item[aria-pressed="true"] { background: var(--card-alt); color: var(--mute); }
+.order-item[aria-pressed="true"] { background: var(--ds-surface-overlay); color: var(--ds-text-secondary); }
 .order-item[aria-pressed="true"] .order-item__name { text-decoration: line-through; }
-.order-item__tick { color: var(--civilian); font-size: 1rem; }
+.order-item__tick { color: var(--ds-success-text); font-size: 1rem; }
 .order-item:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
 
 /* The row is two separate controls: the name toggles "has spoken", the
@@ -333,28 +305,28 @@ h2.subtitle {
 .order-row .order-item { flex: 1 1 auto; min-width: 0; }
 .order-peek {
   flex: 0 0 auto;
-  width: var(--tap);
-  min-height: var(--tap);
+  width: var(--ds-control-target);
+  min-height: var(--ds-control-target);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ds-border);
   border-radius: 10px;
-  background: var(--card);
-  color: var(--mute);
+  background: var(--ds-surface-raised);
+  color: var(--ds-text-secondary);
   cursor: pointer;
   font-family: inherit;
 }
 .order-peek:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
-.order-peek:active { background: var(--card-alt); }
+.order-peek:active { background: var(--ds-surface-overlay); }
 .order-peek .icon { width: 22px; height: 22px; display: block; }
 
 /* ---------------- results ---------------- */
 
 .verdict { text-align: center; display: grid; gap: 0.5rem; }
-.verdict--civilians .verdict__who { color: var(--civilian); }
-.verdict--impostors .verdict__who { color: var(--undercover); }
-.verdict--mrshake .verdict__who { color: var(--shake); }
+.verdict--civilians .verdict__who { color: var(--ds-success-text); }
+.verdict--impostors .verdict__who { color: var(--ds-chart-4); }
+.verdict--mrshake .verdict__who { color: var(--ds-warning-text); }
 .verdict__who {
   font-family: var(--ds-font-display);
   font-weight: 600;
@@ -369,41 +341,41 @@ h2.subtitle {
   align-items: center;
   gap: 0.625rem;
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--line);
+  border: 1px solid var(--ds-border);
+  border-left: 4px solid var(--ds-border);
   border-radius: 10px;
-  background: var(--card);
+  background: var(--ds-surface-raised);
   font-size: 0.9375rem;
 }
-.roster-row--civilian { border-left-color: var(--civilian); }
-.roster-row--undercover { border-left-color: var(--undercover); }
-.roster-row--mrshake { border-left-color: var(--shake); }
+.roster-row--civilian { border-left-color: var(--ds-success-text); }
+.roster-row--undercover { border-left-color: var(--ds-chart-4); }
+.roster-row--mrshake { border-left-color: var(--ds-warning-text); }
 .roster-row--out { opacity: 0.55; }
-.roster-row__role { font-size: 0.75rem; color: var(--mute); }
+.roster-row__role { font-size: 0.75rem; color: var(--ds-text-secondary); }
 .roster-row__word {
   font-family: var(--ds-font-body);
   font-size: 0.8125rem;
-  color: var(--mute);
+  color: var(--ds-text-secondary);
 }
 
 .pair-line { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
 .pair-word { font-family: var(--ds-font-display);
   font-size: 1.25rem; font-weight: 600; }
-.pair-word--civilian { color: var(--civilian); }
-.pair-word--undercover { color: var(--undercover); }
+.pair-word--civilian { color: var(--ds-success-text); }
+.pair-word--undercover { color: var(--ds-chart-4); }
 
 .tally { display: grid; gap: 0.375rem; }
 .tally-row { display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: center; font-size: 0.9375rem; }
-.tally-bar { height: 6px; border-radius: 3px; background: var(--undercover); }
+.tally-bar { height: 6px; border-radius: 3px; background: var(--ds-chart-4); }
 
 .guess-input {
   width: 100%;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.875rem 1rem;
-  border: 2px solid var(--shake-soft);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink);
+  border: 2px solid var(--ds-warning-icon);
+  border-radius: var(--ds-radius-container);
+  background: var(--ds-surface-raised);
+  color: var(--ds-text);
   font-family: var(--ds-font-display);
   font-size: 1.375rem;
   font-weight: 600;
@@ -418,7 +390,7 @@ h2.subtitle {
 .stack--loose { gap: 1.25rem; }
 .center { text-align: center; }
 .spread { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
-.footer { flex: 0 0 auto; padding-top: 0.75rem; border-top: 1px solid var(--line); }
+.footer { flex: 0 0 auto; padding-top: 0.75rem; border-top: 1px solid var(--ds-border); }
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; margin: -1px;
   padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -444,13 +416,13 @@ h2.subtitle {
    loudest of the three on purpose — it is the one you want to notice is
    still on from last time before the phone goes round. */
 .chip--pack-rude[aria-pressed="true"] {
-  background: var(--undercover);
-  border-color: var(--undercover);
+  background: var(--ds-chart-4);
+  border-color: var(--ds-chart-4);
   color: var(--on-role);
 }
 .chip--pack-explicit[aria-pressed="true"] {
-  background: var(--shake);
-  border-color: var(--shake);
+  background: var(--ds-warning-text);
+  border-color: var(--ds-warning-text);
   color: var(--on-role);
 }
 
@@ -460,12 +432,12 @@ h2.subtitle {
 .rename { display: grid; gap: 0.625rem; }
 .rename__input {
   width: 100%;
-  min-height: var(--tap);
+  min-height: var(--ds-control-target);
   padding: 0.75rem 1rem;
-  border: 2px solid var(--civilian-soft);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink);
+  border: 2px solid var(--ds-success-icon);
+  border-radius: var(--ds-radius-container);
+  background: var(--ds-surface-raised);
+  color: var(--ds-text);
   font-family: var(--ds-font-display);
   font-size: 1.75rem;
   font-weight: 600;
@@ -473,7 +445,7 @@ h2.subtitle {
 }
 .rename__input:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 1px; }
 
-@media (max-width:380px) { .role-row {grid-template-columns:minmax(0,1fr); gap:12px} .role-row > .ds-stepper {margin-left:auto} }
+@media (max-width:380px) { .role-row {grid-template-columns:minmax(0,1fr); gap:12px} }
 
 .role-row__count, .name-field__n, .order-item__n {font-variant-numeric:tabular-nums}
 .role-row {border-radius:0; background:transparent; border-width:0 0 1px; padding:14px 0}
@@ -482,15 +454,13 @@ h2.subtitle {
 .word-card {border-radius:var(--ds-radius-container)}
 .title, .subtitle, .who, .word, .verdict__who {font-weight:500; font-variation-settings:normal; letter-spacing:-.035em}
 
-/* Felt (design system 0.6): buttons, keys and chips are raised pills. Pressed
-   presses in. Ghost buttons stay flat with an outline so they read as secondary.
-   Role colours on pressed chips, chosen players and danger buttons stay as they are. */
-.btn, .chip, .segmented .chip {border-radius:var(--ds-radius-pill)}
-.btn:not(.btn--ghost), .chip, .player-btn, .order-item, .order-peek {border-color:transparent; box-shadow:var(--ds-shadow-raised)}
+/* Felt: keys and chips are raised pills, and pressed presses in. Role colours on pressed chips
+   and chosen players stay as they are. */
+.chip, .segmented .chip {border-radius:var(--ds-radius-pill)}
+.chip, .player-btn, .order-item, .order-peek {border-color:transparent; box-shadow:var(--ds-shadow-raised)}
 .chip {background:var(--ds-surface-raised); color:var(--ds-text-secondary)}
-.btn:not(.btn--ghost):active, .chip:active, .player-btn:active, .order-peek:active {box-shadow:var(--ds-shadow-pressed)}
+.chip:active, .player-btn:active, .order-peek:active {box-shadow:var(--ds-shadow-pressed)}
 .order-item[aria-pressed="true"] {box-shadow:var(--ds-shadow-pressed)}
-.btn:disabled {box-shadow:none}
 .footer {padding:12px 0; text-align:left}
 
 /* Text on role fills (undercover mustard, Mr. Shake amber). Those fills are dark in light mode and
@@ -499,3 +469,13 @@ h2.subtitle {
 :root[data-project] {--on-role:#FFFFFF}
 :root[data-project][data-theme="dark"] {--on-role:#262624}
 @media (prefers-color-scheme: dark) {:root[data-project]:not([data-theme]) {--on-role:#262624}}
+
+/* Until 0.14 these came from the design system's legacy.css: the shared focus ring and selection,
+   the display face on headings, 60px chips at game density, and the skip link. */
+:focus-visible {outline:3px solid var(--ds-focus); outline-offset:4px}
+::selection {background:var(--ds-selection); color:var(--ds-text)}
+h1, h2, .title, .word {font-family:var(--ds-font-display); font-variation-settings:var(--ds-font-display-variation)}
+.chip {min-height:var(--ds-control-target); min-width:var(--ds-control-target)}
+.skip-link {position:fixed; z-index:10000; top:12px; left:12px; transform:translateY(-200%); padding:12px 16px; min-height:44px; border:1px solid var(--ds-border); border-radius:var(--ds-radius-control); background:var(--ds-surface-overlay); color:var(--ds-text); text-decoration:none}
+.skip-link:focus {transform:none}
+

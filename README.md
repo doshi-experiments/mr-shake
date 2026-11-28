@@ -264,9 +264,13 @@ central `npm run rollout` command. Keep the `sheet-theme` cookie and the prepain
 script intact.
 
 Styles build with Tailwind CSS v4 (`@tailwindcss/cli`). `src/tw.css` imports Tailwind
-and Felt's theme, then the shared `components.css`, `legacy.css` and the game's
-`app.css` in the components layer, in the order they always loaded, so their cascade
-is unchanged and utilities override them. A small base block keeps what the game drew
+and Felt's theme, then the game's `app.css` in the components layer, so utilities and
+the shared `/ui` components override it. The game uses `/ui`'s header, stepper,
+disclosure and Button (its actions at game size: full width, 60px and up, larger
+type); its own controls (chips, the pack switch, player buttons, the speaking order and
+the face-down card) start from `app.css`'s `.game-key`, and everything reads the
+`--ds-*` tokens directly. Nothing comes from `components.css`, `legacy.css` or
+`/react`. A small base block keeps what the game drew
 before it had a reset: name fields use the browser's normal line height, and
 placeholders its own grey. `game:` targets Felt's game density and `min-h-target` is
 60px there, for new markup.
