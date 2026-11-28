@@ -34,7 +34,7 @@ Browser suite: `./build.sh && node test/serve.mjs & node test/e2e.mjs` (CDP at 3
 
 - `src/game.js` is the rules: pure, no React, no DOM and no `Math.random`. Chance always comes from an explicit `rng`, so a game replays from a seed and imports straight into Node.
 - `src/words.js` holds the three packs and the rules they must obey. `src/App.jsx` holds the screens. `src/app.css` holds layout, role colours and the Felt touches over the shared tokens.
-- The game depends on the committed design-system tarball. Never edit it; upgrade through the design-system repository's central `npm run rollout`. `src/tw.css` is the stylesheet: Tailwind CSS v4 and Felt's theme, then `components.css`, `legacy.css` and `app.css` in the components layer (their old order, so their cascade is unchanged). Buttons stay on `/react`'s `Button`: the game's `.btn` rules in `app.css` style them, and `/ui`'s utilities would outrank those.
+- The game depends on the committed design-system tarball. Never edit it; upgrade through the design-system repository's central `npm run rollout`. `src/tw.css` is the stylesheet: Tailwind CSS v4 and Felt's theme, then `app.css` in the components layer. The shared controls (SiteHeader, NumberStepper, Disclosure, Button) come from `/ui`, with the game's sizes as utilities on Button; the game's own controls are plain buttons on `app.css`'s `.game-key`. Nothing comes from `components.css`, `legacy.css` or `/react`, and `app.css` reads `--ds-*` tokens, not the old names.
 
 ## Invariants that are easy to break
 

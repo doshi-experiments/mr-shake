@@ -1,13 +1,11 @@
-/* The game's stylesheet: Tailwind CSS v4 with Felt's theme, then the shared components,
-   the legacy variable names app.css reads, and app.css itself, all in the components layer
-   and in the order they always loaded, so their cascade is unchanged and utilities win.
-   The Tailwind CLI keeps the package's url()s as written; build.sh copies fonts/ and felt/
-   beside dist/app.css to match. */
+/* The game's stylesheet: Tailwind CSS v4 with Felt's theme, then app.css in the components layer,
+   so utilities (and /ui's components, which tailwind.css scans) outrank it. Since 0.14 the game
+   takes nothing from components.css or legacy.css: its shared controls are /ui's and app.css
+   reads the --ds-* tokens directly. The Tailwind CLI keeps the package's url()s as written;
+   build.sh copies fonts/ and felt/ beside dist/app.css to match. */
 @import "tailwindcss" source(none);
 @source "./App.jsx";
 @import "@doshi-experiments/design-system/tailwind.css";
-@import "@doshi-experiments/design-system/components.css" layer(components);
-@import "../node_modules/@doshi-experiments/design-system/dist/legacy.css" layer(components);
 @import "./app.css" layer(components);
 
 /* Where Tailwind's preflight changes what the game drew before it had a reset: form controls
